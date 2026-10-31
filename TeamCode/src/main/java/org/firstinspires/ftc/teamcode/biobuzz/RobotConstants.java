@@ -320,6 +320,9 @@ public class RobotConstants {
             w.add("POLLEN RPM table is the placeholder line");
         if (ROBOT_HALF_LENGTH_IN == 9.0 && ROBOT_HALF_WIDTH_IN == 9.0)
             w.add("Robot size is the 18 in cube placeholder");
+        if (org.firstinspires.ftc.teamcode.pedroPathing.Constants.localizerConstants.forwardPodY == 0.0
+                && org.firstinspires.ftc.teamcode.pedroPathing.Constants.localizerConstants.strafePodX == 0.0)
+            w.add("Pinpoint pod offsets are (0,0): measure them (pedroPathing/Constants.java)");
         if (!TURRET_FIXED && TURRET_TICKS_PER_DEG == 0.0)
             w.add("TURRET_TICKS_PER_DEG not set: turret stays unpowered");
         if (!TURRET_FIXED && TURRET_MIN_DEG == -150.0 && TURRET_MAX_DEG == 150.0)

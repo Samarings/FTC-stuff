@@ -34,8 +34,11 @@ public class Constants {
             .xVelocity(66.4513)
             .yVelocity(54.589);
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(-6)
-            .strafePodX(10)
+            // PLACEHOLDER (0, 0): pods assumed at the robot's rotation center. Measure from the
+            // rotation center to each pod (mm) and put the real values here, then check with the
+            // 10-spin test in "Localization Test" (position should barely move).
+            .forwardPodY(0)
+            .strafePodX(0)
             .distanceUnit(DistanceUnit.MM)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
