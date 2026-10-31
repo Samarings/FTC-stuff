@@ -127,7 +127,7 @@ public class RobotConstants {
     // INTAKE / FEEDER (no servos: the feeder motor gates balls into the flywheel)
     // =====================================================================================
     public static boolean INTAKE_REVERSED = true;   // DECODE: REVERSE
-    public static boolean FEEDER_REVERSED = false;  // DECODE: FORWARD
+    public static boolean FEEDER_REVERSED = true;   // flipped after testing: + now pushes balls IN toward the flywheel
 
     public static double INTAKE_COLLECT_POWER = 1.0;
     /**
