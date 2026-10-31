@@ -81,7 +81,6 @@ public class BiobuzzTeleOp extends OpMode {
         if (fromAuto) alliance = PoseStorage.alliance;
         CellSide up = fromAuto && PoseStorage.upCell != null ? PoseStorage.upCell : alliance.startUpCell();
 
-        // false: don't move the stopper servos until START (G403)
         robot = new Robot(hardwareMap, alliance, up, false);
         follower = robot.localizer.follower();
         if (fromAuto) {
@@ -203,7 +202,6 @@ public class BiobuzzTeleOp extends OpMode {
         robot.feeder.setMode(mode);
 
         robot.actuate(now, dt);
-        robot.showStatus();
         robot.savePose();
 
         // ---------------- telemetry

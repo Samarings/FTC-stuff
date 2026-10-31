@@ -34,10 +34,6 @@ public class RobotConstants {
     public static String INTAKE_NAME = "intake";
     public static String FEEDER_NAME = "feeder";
     public static String SHOOTER_NAME = "shooter";
-    public static String LEFT_STOP_NAME = "leftStop";
-    public static String RIGHT_STOP_NAME = "rightStop";
-    public static String LED_LEFT_NAME = "ledLeft";
-    public static String LED_RIGHT_NAME = "ledRight";
     public static String LIMELIGHT_NAME = "limelight";
     /** Turret rotation motor. Optional while TURRET_FIXED (missing hardware is fine). */
     public static String TURRET_NAME = "turret";
@@ -128,13 +124,18 @@ public class RobotConstants {
     public static double[] NECTAR_RPM = {2000, 2250, 2500, 2750, 3000, 3250};
 
     // =====================================================================================
-    // INTAKE / FEEDER / STOPPERS (same layout as DECODE)
+    // INTAKE / FEEDER (no servos: the feeder motor gates balls into the flywheel)
     // =====================================================================================
     public static boolean INTAKE_REVERSED = true;   // DECODE: REVERSE
     public static boolean FEEDER_REVERSED = false;  // DECODE: FORWARD
 
     public static double INTAKE_COLLECT_POWER = 1.0;
-    public static double FEEDER_COLLECT_POWER = 1.0;
+    /**
+     * Feeder power while intaking. No stopper servos: the feeder motor is the only thing
+     * keeping balls out of the flywheel, so keep this 0 (or slightly negative to hold balls
+     * back) unless the mechanism can stage balls without reaching the flywheel.
+     */
+    public static double FEEDER_COLLECT_POWER = 0.0;
     public static double INTAKE_EJECT_POWER = 1.0;
     public static double FEEDER_EJECT_POWER = 1.0;
 
@@ -144,11 +145,6 @@ public class RobotConstants {
     public static double FEED_PULSE_ON_SEC = 0.11;
     public static double FEED_PULSE_OFF_SEC = 0.08;
 
-    // Stopper servo positions (DECODE)
-    public static double LEFT_STOP_CLOSED = 0.50;
-    public static double LEFT_STOP_OPEN = 0.00;
-    public static double RIGHT_STOP_CLOSED = 0.00;
-    public static double RIGHT_STOP_OPEN = 1.00;
 
     /** G407: never control more than this many scoring elements. */
     public static int MAX_BALLS = 4;
@@ -161,15 +157,6 @@ public class RobotConstants {
      */
     public static double INTAKE_HEADING_OFFSET_DEG = 0.0;
 
-    // =====================================================================================
-    // LEDs (goBILDA PWM RGB, DECODE calibration)
-    // =====================================================================================
-    public static double LED_PWM_MIN_US = 500.0;
-    public static double LED_PWM_MAX_US = 2500.0;
-    public static double LED_RED_US = 1101.0;
-    public static double LED_ORANGE_US = 1142.0;
-    public static double LED_YELLOW_US = 1200.0;
-    public static double LED_GREEN_US = 1500.0;
 
     // =====================================================================================
     // CAMERA (Limelight 3A, on the turret, fixed facing forward for now)

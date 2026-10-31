@@ -17,7 +17,6 @@ public class Robot {
     public final Vision vision;
     public final Shooter shooter;
     public final Feeder feeder;
-    public final Leds leds;
     public final Turret turret;
     public TipTracker tips;
     public ShotSolver solver;
@@ -28,20 +27,17 @@ public class Robot {
     private int newShotsThisLoop = 0;
 
     /**
-     * @param commandServosInInit true for AUTO-type OpModes (servos set in INIT, and the turret
-     *                            home is recorded here: the turret must be on its mark).
-     *                            false for TeleOp-type OpModes (G403: nothing moves in INIT;
-     *                            the turret keeps AUTO's home if AUTO just ran, otherwise it
-     *                            assumes the turret is on its mark).
+     * @param autoInit true for AUTO-type OpModes: the turret home is recorded here (turret
+     *                 must be on its mark). false for TeleOp-type OpModes: the turret keeps
+     *                 AUTO's home if AUTO just ran, otherwise it assumes it's on its mark.
      */
-    public Robot(HardwareMap hw, Alliance alliance, CellSide initialUpCell, boolean commandServosInInit) {
+    public Robot(HardwareMap hw, Alliance alliance, CellSide initialUpCell, boolean autoInit) {
         this.alliance = alliance;
         localizer = new Localizer(hw);
         vision = new Vision(hw, alliance);
         shooter = new Shooter(hw);
-        feeder = new Feeder(hw, commandServosInInit);
-        leds = new Leds(hw);
-        Integer savedHome = (!commandServosInInit && PoseStorage.isFresh(600.0)) ? PoseStorage.turretHomeTicks : null;
+        feeder = new Feeder(hw);
+        Integer savedHome = (!autoInit && PoseStorage.isFresh(600.0)) ? PoseStorage.turretHomeTicks : null;
         turret = new Turret(hw, savedHome);
         tips = new TipTracker(alliance, initialUpCell);
         solver = new ShotSolver(alliance);
@@ -86,15 +82,6 @@ public class Robot {
         }
         feeder.update(nowSec);
         turret.update(nowSec); // always 0 power while TURRET_FIXED
-    }
-
-    /** LEDs from the current solution. */
-    public void showStatus() {
-        if (solution == null) return;
-        if (solution.canShoot) leds.set(Leds.Color.GREEN);
-        else if (shooter.isReady()) leds.set(Leds.Color.YELLOW);
-        else if (shooter.getMode() != Shooter.Mode.ACTIVE) leds.set(Leds.Color.ORANGE);
-        else leds.set(Leds.Color.RED);
     }
 
     public int newShotsThisLoop() { return newShotsThisLoop; }

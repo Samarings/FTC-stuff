@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -15,14 +14,13 @@ import org.firstinspires.ftc.teamcode.biobuzz.Buttons;
 import org.firstinspires.ftc.teamcode.biobuzz.Turret;
 
 /**
- * Check the intake, feeder, shooter, turret motor and stopper servos one at a time: names,
+ * Check the intake, feeder, shooter and turret motors one at a time: names,
  * wiring, directions, encoders and current. Directions come from RobotConstants, so what you
  * see here is what the match code does.
  *
  * Gamepad 1:
  *   dpad up/down   select device
- *   left stick Y   power for the selected motor (up = +), or move the selected servo
- *   X / Y          stopper servos: CLOSED / OPEN positions from RobotConstants
+ *   left stick Y   power for the selected motor (up = +)
  *   B              stop everything
  *
  * Expected: + intake/feeder power pulls balls IN toward the shooter (else flip
@@ -32,13 +30,11 @@ import org.firstinspires.ftc.teamcode.biobuzz.Turret;
  */
 @TeleOp(name = "Motor Test (intake/feeder/shooter/turret)", group = "Calibration")
 public class MotorTest extends OpMode {
-    private static final String[] NAMES = {"intake", "feeder", "shooter", "turret", "leftStop", "rightStop"};
+    private static final String[] NAMES = {"intake", "feeder", "shooter", "turret"};
 
     private DcMotorEx intake, feeder, shooter, turretMotor;
-    private Servo leftStop, rightStop;
     private Turret turret;
     private int sel = 0;
-    private double leftPos = Double.NaN, rightPos = Double.NaN;
     private final Buttons buttons = new Buttons();
     private double lastSec = -1;
 
@@ -49,8 +45,6 @@ public class MotorTest extends OpMode {
         shooter = motor(SHOOTER_NAME, SHOOTER_REVERSED, DcMotor.ZeroPowerBehavior.FLOAT);
         turret = new Turret(hardwareMap, null); // handles direction, FLOAT when locked, limits
         try { turretMotor = hardwareMap.get(DcMotorEx.class, TURRET_NAME); } catch (Exception e) { turretMotor = null; }
-        try { leftStop = hardwareMap.get(Servo.class, LEFT_STOP_NAME); } catch (Exception e) { leftStop = null; }
-        try { rightStop = hardwareMap.get(Servo.class, RIGHT_STOP_NAME); } catch (Exception e) { rightStop = null; }
     }
 
     private DcMotorEx motor(String name, boolean reversed, DcMotor.ZeroPowerBehavior zpb) {
@@ -94,15 +88,6 @@ public class MotorTest extends OpMode {
         else turret.off();
         turret.update(now);
 
-        if (leftStop != null) {
-            if (buttons.pressed("x", gamepad1.x)) { leftPos = LEFT_STOP_CLOSED; if (rightStop != null) rightPos = RIGHT_STOP_CLOSED; }
-            if (buttons.pressed("y", gamepad1.y)) { leftPos = LEFT_STOP_OPEN; if (rightStop != null) rightPos = RIGHT_STOP_OPEN; }
-        }
-        if (sel == 4 && leftStop != null && stick != 0) leftPos = Range.clip((Double.isNaN(leftPos) ? 0.5 : leftPos) + stick * 0.5 * dt, 0, 1);
-        if (sel == 5 && rightStop != null && stick != 0) rightPos = Range.clip((Double.isNaN(rightPos) ? 0.5 : rightPos) + stick * 0.5 * dt, 0, 1);
-        if (leftStop != null && !Double.isNaN(leftPos)) leftStop.setPosition(leftPos);
-        if (rightStop != null && !Double.isNaN(rightPos)) rightStop.setPosition(rightPos);
-
         telemetry.addLine("Selected (dpad): >> " + NAMES[sel] + " <<   stick=" + String.format("%.2f", stick));
         telemetry.addLine(line("intake", intake, 1));
         telemetry.addLine(line("feeder", feeder, 1));
@@ -110,10 +95,6 @@ public class MotorTest extends OpMode {
         telemetry.addLine(turret.describe() + (turretMotor != null ? String.format("  %.2fA", turretMotor.getCurrent(CurrentUnit.AMPS)) : ""));
         if (TURRET_FIXED) telemetry.addLine("  turret LOCKED (TURRET_FIXED): never powered, encoder only");
         else if (!Turret.isCalibrated()) telemetry.addLine("  turret not calibrated: never powered (run Turret Calibration)");
-        telemetry.addLine(String.format("leftStop %s pos=%s   (closed %.2f / open %.2f)", leftStop == null ? "MISSING" : "ok",
-                Double.isNaN(leftPos) ? "-" : String.format("%.2f", leftPos), LEFT_STOP_CLOSED, LEFT_STOP_OPEN));
-        telemetry.addLine(String.format("rightStop %s pos=%s  (closed %.2f / open %.2f)", rightStop == null ? "MISSING" : "ok",
-                Double.isNaN(rightPos) ? "-" : String.format("%.2f", rightPos), RIGHT_STOP_CLOSED, RIGHT_STOP_OPEN));
         telemetry.addLine("+ intake/feeder = balls IN; + shooter = launch, RPM positive.");
         telemetry.update();
     }

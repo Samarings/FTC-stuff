@@ -92,9 +92,10 @@ Details: brief, section "TEMPORARY: treat the turret as FIXED".
   - Launch only into our up cell (G417).
   - No NECTAR into FLOWERS before 1:00 left (G410).
   - The size limit 18×24×29 in must be mechanical, not software (R105).
-- **Hardware names from DECODE:** `frontLeft`, `frontRight`, `backLeft`, `backRight`,
-  `intake`, `feeder`, `shooter`, `leftStop`, `rightStop`, `ledLeft`, `ledRight`,
-  `pinpoint`, `limelight`. New: a turret motor (name TBD).
+- **Hardware names:** `frontLeft`, `frontRight`, `backLeft`, `backRight`, `intake`,
+  `feeder`, `shooter`, `turret`, `pinpoint`, `limelight`. **No servos on this robot**
+  (no stoppers, no servo-driven LEDs): the feeder motor gates balls into the flywheel,
+  so it must stay off while intaking.
 - **TIP threshold:** **8 POLLEN** tips a HIVE (`BALLS_TO_TIP = 8`). Both robots'
   4 pre-loads = an AUTO TIP.
 - **Unknown values:** don't block on them, and don't invent numbers.

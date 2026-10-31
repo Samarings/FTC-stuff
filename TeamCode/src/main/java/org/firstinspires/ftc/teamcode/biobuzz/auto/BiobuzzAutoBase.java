@@ -204,7 +204,6 @@ public abstract class BiobuzzAutoBase extends OpMode {
         }
         if (!mechStopped) robot.actuate(now, dt);
 
-        robot.showStatus();
         robot.savePose();
         telemetry(sol, t);
     }

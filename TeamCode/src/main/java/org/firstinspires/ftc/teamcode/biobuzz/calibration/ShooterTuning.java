@@ -110,7 +110,6 @@ public class ShooterTuning extends OpMode {
         boolean fire = gamepad2.right_trigger > 0.5 && robot.shooter.isReady();
         robot.feeder.setMode(fire ? Feeder.Mode.FEED : (gamepad2.left_trigger > 0.3 ? Feeder.Mode.COLLECT : Feeder.Mode.HOLD));
         robot.actuate(now, dt);
-        robot.showStatus();
 
         if (buttons.pressed("g2a", gamepad2.a)) log(sol.distanceIn, rpm);
 
