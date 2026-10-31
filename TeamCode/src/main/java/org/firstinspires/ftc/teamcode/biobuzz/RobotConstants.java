@@ -287,7 +287,8 @@ public class RobotConstants {
     // =====================================================================================
     public static double TELEOP_SLOW_SCALE = 0.4;
     public static double TELEOP_TURN_SCALE = 0.8;
-    public static double TELEOP_RPM_TRIM_STEP = 50.0;
+    /** RPM change per button press everywhere (TeleOp trim, Shooter Tuning, PIDF Tuner). */
+    public static double RPM_ADJUST_STEP = 50.0;
     public static double TELEOP_LENGTH_S = 120.0;
 
     // =====================================================================================

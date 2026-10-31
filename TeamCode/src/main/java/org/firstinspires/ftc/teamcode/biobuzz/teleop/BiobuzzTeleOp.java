@@ -49,7 +49,7 @@ import org.firstinspires.ftc.teamcode.biobuzz.ShotSolver;
  *                   Direct control (no aim/RPM check): spin the shooter up first (B).
  *   left trigger    intake
  *   dpad down       backtake / eject (reverse intake + feeder)
- *   dpad left/right RPM trim -/+ 50
+ *   dpad left/right RPM trim -/+ RPM_ADJUST_STEP (50)
  *   dpad up         we TIPPED but vision missed it: switch to the other CELL (+1 TIP)
  *   Y               ball type POLLEN / NECTAR (selects the RPM table)
  */
@@ -183,8 +183,8 @@ public class BiobuzzTeleOp extends OpMode {
         if (buttons.pressed("g2b", gamepad2.b)) shooterOn = !shooterOn;
         if (buttons.pressed("g2back", gamepad2.back)) idleOn = !idleOn;
         if (buttons.pressed("g2y", gamepad2.y)) ballType = ballType == BallType.POLLEN ? BallType.NECTAR : BallType.POLLEN;
-        if (buttons.pressed("g2l", gamepad2.dpad_left)) rpmTrim -= TELEOP_RPM_TRIM_STEP;
-        if (buttons.pressed("g2r", gamepad2.dpad_right)) rpmTrim += TELEOP_RPM_TRIM_STEP;
+        if (buttons.pressed("g2l", gamepad2.dpad_left)) rpmTrim -= RPM_ADJUST_STEP;
+        if (buttons.pressed("g2r", gamepad2.dpad_right)) rpmTrim += RPM_ADJUST_STEP;
         if (buttons.pressed("g2up", gamepad2.dpad_up)) robot.tips.manualFlip(now, true);
 
         if (shooterOn) robot.shooter.setTargetRpm(sol.rpm);

@@ -33,7 +33,7 @@ import java.util.Locale;
  * Start the robot at the ALLIANCE_WALL start spot (or run an AUTO first) so the pose is right.
  *
  * G1: drive (field-centric), A = auto-aim on/off, X/B in INIT = alliance
- * G2: B shooter on/off, dpad up/down RPM ±50, right stick button = copy table RPM,
+ * G2: B shooter on/off, dpad up/down RPM ±RPM_ADJUST_STEP (50), right stick button = copy table RPM,
  *     right trigger = FIRE (needs RPM ready only), Y = POLLEN/NECTAR,
  *     A = LOG point to /sdcard/FIRST/biobuzz_rpm_points.csv
  */
@@ -98,8 +98,8 @@ public class ShooterTuning extends OpMode {
         follower.setTeleOpDrive(-gamepad1.left_stick_y * sign * 0.5, -gamepad1.left_stick_x * sign * 0.5, turn, false);
 
         if (buttons.pressed("g2b", gamepad2.b)) shooterOn = !shooterOn;
-        if (buttons.pressed("g2up", gamepad2.dpad_up)) rpm += 50;
-        if (buttons.pressed("g2dn", gamepad2.dpad_down)) rpm -= 50;
+        if (buttons.pressed("g2up", gamepad2.dpad_up)) rpm += RPM_ADJUST_STEP;
+        if (buttons.pressed("g2dn", gamepad2.dpad_down)) rpm -= RPM_ADJUST_STEP;
         if (buttons.pressed("g2rs", gamepad2.right_stick_button)) rpm = sol.rpm;
         if (buttons.pressed("g2y", gamepad2.y)) ball = ball == BallType.POLLEN ? BallType.NECTAR : BallType.POLLEN;
         rpm = Math.max(0, Math.min(rpmCap(), rpm));

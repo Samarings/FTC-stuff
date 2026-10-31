@@ -24,7 +24,7 @@ import org.firstinspires.ftc.teamcode.biobuzz.Robot;
  *   dpad right / left  increase / decrease the selected gain by one step
  *   right / left bumper  step x10 / ÷10
  *   B                  shooter on / off (closed-loop at the test RPM)
- *   Y / X              test RPM +250 / -250
+ *   Y / X              test RPM + / - RPM_ADJUST_STEP (50)
  *   right trigger      feeder (shoot a ball to see the RPM dip and recovery)
  *   A                  SAVE gains to the Control Hub (loaded by every OpMode)
  *   BACK (hold 1 s)    delete the saved file, back to the RobotConstants values
@@ -103,8 +103,8 @@ public class PidfTuner extends OpMode {
 
         // ---------------- shooter
         if (buttons.pressed("b", gamepad2.b)) shooterOn = !shooterOn;
-        if (buttons.pressed("y", gamepad2.y)) testRpm += 250;
-        if (buttons.pressed("x", gamepad2.x)) testRpm -= 250;
+        if (buttons.pressed("y", gamepad2.y)) testRpm += RPM_ADJUST_STEP;
+        if (buttons.pressed("x", gamepad2.x)) testRpm -= RPM_ADJUST_STEP;
         testRpm = Math.max(0, Math.min(rpmCap(), testRpm));
         if (shooterOn) robot.shooter.setTargetRpm(testRpm);
         else robot.shooter.off();
@@ -134,7 +134,7 @@ public class PidfTuner extends OpMode {
                     k, PidfStore.get(k), PidfStore.codeDefault(k)));
         }
         telemetryM.addLine(String.format("step = %.6f", step));
-        telemetryM.addLine("Shooter (G2 B): " + (shooterOn ? "ON" : "off") + String.format("  test RPM (Y/X) %.0f", testRpm));
+        telemetryM.addLine("Shooter (G2 B): " + (shooterOn ? "ON" : "off") + String.format("  test RPM (Y/X, ±%.0f) %.0f", RPM_ADJUST_STEP, testRpm));
         if (robot.shooter.getFault() != null) telemetryM.addLine("⚠ SHOOTER FAULT: " + robot.shooter.getFault());
         telemetryM.addData("shooterTargetRpm", robot.shooter.getTargetRpm());
         telemetryM.addData("shooterRpm", robot.shooter.getMeasuredRpm());
