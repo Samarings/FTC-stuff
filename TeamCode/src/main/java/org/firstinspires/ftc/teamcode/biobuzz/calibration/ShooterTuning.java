@@ -118,6 +118,8 @@ public class ShooterTuning extends OpMode {
                 sol.distanceIn, robot.vision.ourCluster(sol.upCell).distanceIn));
         telemetryM.addLine(String.format("RPM set %.0f  meas %.0f  ready %b   table says %.0f",
                 rpm, robot.shooter.getMeasuredRpm(), robot.shooter.isReady(), sol.rpm));
+        if (robot.shooter.getFault() != null)
+            telemetryM.addLine("⚠ SHOOTER FAULT: " + robot.shooter.getFault() + "  (B off clears it)");
         telemetryM.addLine(String.format("aim %s  err %.1f° (%s)", aimOn ? "ON" : "off", sol.aimErrDeg, sol.visionAim ? "LL" : "odom"));
         telemetryM.addLine("RPM cap " + rpmCap() + " (raise RPM_CAP, never above 6000, if far shots fall short)");
         telemetryM.addLine("Logged (dist_in, rpm, ball):");

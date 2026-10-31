@@ -111,6 +111,9 @@ public class RobotConstants {
     /** ...for this many consecutive loops. */
     public static int SHOOTER_READY_LOOPS = 4;
 
+    /** Shooter cuts off if it's at >= 60% power but reads < 150 RPM for this long. */
+    public static double SHOOTER_FAULT_TIME_S = 1.0;
+
     /** Shot detection: a drop this far below target while feeding counts as one launched ball. */
     public static double SHOT_DIP_RPM = 250.0;
     /** The detector re-arms once RPM is back within this band. */

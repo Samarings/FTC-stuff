@@ -106,6 +106,7 @@ public class ShotSolver {
         else if (!s.aimed) why = String.format("AIM %.1f° > %.1f°", Math.abs(s.aimErrDeg), s.toleranceDeg);
         else if (loc.getTurnRateDeg() > SHOOT_MAX_TURN_RATE_DEG_S) why = "TURNING";
         else if (!SHOOT_WHILE_MOVING && loc.getSpeed() > SHOOT_MAX_SPEED_IN_S) why = "MOVING";
+        else if (shooter.getFault() != null) why = "SHOOTER FAULT: " + shooter.getFault();
         else if (!shooter.isReady()) why = "RPM";
         else if (Math.abs(shooter.getTargetRpm() - s.rpm) > SHOOTER_READY_TOL_RPM) why = "RPM TARGET";
         s.canShoot = why == null;

@@ -33,6 +33,8 @@ public class Shooter {
     private int readyLoops = 0;
 
     // shot detection
+    private String fault = null;
+    private double faultSuspectSince = -1.0;
     private boolean feeding = false;
     private boolean dipArmed = true;
     private int shotsDetected = 0;
@@ -55,10 +57,15 @@ public class Shooter {
     /** Open-loop idle (TeleOp). Never counts as "ready". */
     public void idle() {
         mode = Mode.IDLE;
+        fault = null; // leaving ACTIVE clears a fault (fix the cause first!)
+        faultSuspectSince = -1.0;
     }
 
+    /** Turning the shooter off (or to idle) clears a fault (fix the cause first!). */
     public void off() {
         mode = Mode.OFF;
+        fault = null;
+        faultSuspectSince = -1.0;
     }
 
     /** Tell the shot detector whether the feeder is pushing balls right now. */
@@ -74,7 +81,7 @@ public class Shooter {
         measuredRpm = motor.getVelocity() * 60.0 / SHOOTER_TICKS_PER_REV;
         if (dt <= 0) dt = 0.02;
 
-        boolean active = mode == Mode.ACTIVE && targetRpm > 1.0;
+        boolean active = mode == Mode.ACTIVE && targetRpm > 1.0 && fault == null;
 
         if (active) {
             if (!wasActive && measuredRpm < targetRpm * 0.5) {
@@ -107,6 +114,22 @@ public class Shooter {
             double d = goal - powerCmd;
             powerCmd = Math.abs(d) <= step ? goal : powerCmd + Math.signum(d) * step;
         }
+        // Encoder / direction sanity: hard power but the encoder says ~0 or backwards means an
+        // unplugged encoder or a wrong SHOOTER_REVERSED. The PID would otherwise run the motor
+        // at full power (~6000 RPM, past RPM_CAP). Cut power and report.
+        if (active && powerCmd >= 0.6 && measuredRpm < 150.0) {
+            if (faultSuspectSince < 0) faultSuspectSince = nowSec;
+            else if (nowSec - faultSuspectSince > SHOOTER_FAULT_TIME_S) {
+                fault = measuredRpm < -150.0 ? "RPM NEGATIVE: flip SHOOTER_REVERSED"
+                        : "NO RPM: check shooter encoder cable";
+                powerCmd = 0.0;
+                resetPid();
+            }
+        } else {
+            faultSuspectSince = -1.0;
+        }
+        if (fault != null) powerCmd = 0.0;
+
         wasActive = active;
         motor.setPower(powerCmd);
 
@@ -138,10 +161,12 @@ public class Shooter {
     }
 
     public boolean isReady() {
-        return mode == Mode.ACTIVE && targetRpm > 1.0 && readyLoops >= SHOOTER_READY_LOOPS;
+        return mode == Mode.ACTIVE && fault == null && targetRpm > 1.0 && readyLoops >= SHOOTER_READY_LOOPS;
     }
 
     public Mode getMode() { return mode; }
+    /** Non-null if the shooter cut itself off (encoder/direction problem). Cleared by off(). */
+    public String getFault() { return fault; }
     public double getTargetRpm() { return mode == Mode.ACTIVE ? targetRpm : 0.0; }
     public double getMeasuredRpm() { return measuredRpm; }
     public double getPower() { return powerCmd; }

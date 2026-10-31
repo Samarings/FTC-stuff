@@ -27,6 +27,8 @@ import org.firstinspires.ftc.teamcode.biobuzz.auto.AutoPoses;
  * robot in INIT (X/B alliance, dpad up/down start spot) and the Pinpoint is reset there.
  * Nothing is commanded until START (G403: no motion in the AUTO->TELEOP transition).
  *
+ * INIT: gamepad 1 Y toggles PRACTICE mode (no 2:00 shutoff; default when no AUTO ran).
+ *
  * GAMEPAD 1 (driver)
  *   left stick      field-centric translation (from our alliance wall's point of view)
  *   right stick X   turn (manual)
@@ -67,6 +69,8 @@ public class BiobuzzTeleOp extends OpMode {
 
     private double startSec = 0.0, lastSec = 0.0;
     private boolean matchOver = false;
+    /** Practice: no 2:00 auto-shutoff. Defaults ON when no AUTO ran; G1 Y toggles in INIT. */
+    private boolean practice = false;
 
     @Override
     public void init() {
@@ -89,6 +93,7 @@ public class BiobuzzTeleOp extends OpMode {
             robot.localizer.resetImuAndSetPose(defaultPose());
         }
         robot.feeder.forgetBallCount(); // no ball sensor
+        practice = !fromAuto;
     }
 
     @Override
@@ -104,11 +109,15 @@ public class BiobuzzTeleOp extends OpMode {
                 robot.localizer.setPose(defaultPose());
             }
         }
+        if (buttons.pressed("inity", gamepad1.y)) practice = !practice;
         double now = getRuntime();
         robot.localizer.updatePoseOnly(now);
         robot.vision.update(robot.localizer.getHeadingDeg(), 0.0, now);
 
         telemetryM.addLine("=== BIOBUZZ TeleOp ===");
+        telemetryM.addLine(practice
+                ? "PRACTICE MODE (G1 Y): no 2:00 shutoff. Use MATCH mode in real matches!"
+                : "MATCH MODE (G1 Y): all outputs stop 2:00 after START (G404).");
         if (fromAuto) {
             telemetryM.addLine("Pose from AUTO: " + fmt(PoseStorage.pose) + "  alliance " + alliance
                     + "  up CELL " + robot.tips.getUpCell());
@@ -116,7 +125,8 @@ public class BiobuzzTeleOp extends OpMode {
             telemetryM.addLine("No AUTO pose: robot placed by hand.");
             telemetryM.addLine("Alliance (X blue / B red): " + alliance);
             telemetryM.addLine("Start spot (dpad up/down): " + startSpot + "  " + fmt(defaultPose()));
-            telemetryM.addLine("Put the robot exactly on that spot (heading matters most).");
+            telemetryM.addLine("Put the robot on that spot (heading matters most). Quick test: just");
+            telemetryM.addLine("face the robot AWAY from the drivers; field-centric uses this heading.");
             telemetryM.addLine("Or re-seed after START: G1 BACK+START in the alliance/far-wall corner.");
         }
         telemetryM.addLine("Limelight: " + (robot.vision.isConnected() ? "connected" : "NOT CONNECTED"));
@@ -140,7 +150,7 @@ public class BiobuzzTeleOp extends OpMode {
         if (dt <= 0 || dt > 0.2) dt = 0.02;
         lastSec = now;
 
-        boolean periodOk = t < TELEOP_LENGTH_S;
+        boolean periodOk = practice || t < TELEOP_LENGTH_S;
         ShotSolver.Solution sol = robot.sense(now, ballType, periodOk, rpmTrim, true);
 
         // G404: nothing powered after the match ends.
@@ -149,8 +159,7 @@ public class BiobuzzTeleOp extends OpMode {
                 matchOver = true;
                 robot.stopMechanisms();
             }
-            follower.setTeleOpDrive(0, 0, 0, true);
-            follower.update();
+            follower.setTeleOpDrive(0, 0, 0, true); // applied by next loop's follower.update()
             telemetryM.addLine("MATCH OVER: all outputs off (G404). Press STOP.");
             telemetryM.update(telemetry);
             return;
@@ -198,8 +207,9 @@ public class BiobuzzTeleOp extends OpMode {
         robot.savePose();
 
         // ---------------- telemetry
-        double left = TELEOP_LENGTH_S - t;
-        telemetryM.addLine(String.format("%s | %d:%02d left%s", alliance, (int) left / 60, (int) left % 60,
+        double left = Math.max(0, TELEOP_LENGTH_S - t);
+        telemetryM.addLine(practice ? String.format("%s | PRACTICE  t=%.0f s", alliance, t)
+                : String.format("%s | %d:%02d left%s", alliance, (int) left / 60, (int) left % 60,
                 left <= 60 ? "  FLOWERS OPEN (NECTAR ok)" : "  (no NECTAR in FLOWERS yet: G410)"));
         telemetryM.addLine("AIM " + (aimOn ? "ON" : "off") + "  slow " + slow + "  " + robot.aimer.name());
         telemetryM.addLine(String.format("Target %s CELL  dist=%.1f in  aimErr=%.1f° (%s) tol=%.1f°",
@@ -207,6 +217,8 @@ public class BiobuzzTeleOp extends OpMode {
         telemetryM.addLine(String.format("Shooter %s  RPM tgt/meas %.0f / %.0f  trim %+.0f  %s",
                 shooterOn ? "ON" : (idleOn ? "idle" : "off"), robot.shooter.getTargetRpm(),
                 robot.shooter.getMeasuredRpm(), rpmTrim, ballType));
+        if (robot.shooter.getFault() != null)
+            telemetryM.addLine("⚠ SHOOTER FAULT: " + robot.shooter.getFault() + "  (G2 B off clears it)");
         telemetryM.addLine("canShoot: " + (sol.canShoot ? "YES" : "no (" + sol.whyNot + ")")
                 + (manualAim ? "  [MANUAL AIM]" : ""));
         telemetryM.addLine(String.format("TIPS %d  ~%d more to tip%s  shots %d",
