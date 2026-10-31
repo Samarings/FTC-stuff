@@ -17,18 +17,20 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
  *  - FEED:    intake + feeder pulsed to push balls into the flywheel. Only the caller
  *             decides when FEED is allowed (canShoot gate, G417).
  *  - EJECT:   both motors reversed.
+ *  - MANUAL:  driver sets intake and feeder power directly (TeleOp triggers).
  *
  * There is no ball sensor, so the ball count is an ESTIMATE: set it when you know
  * (4 pre-loads, after collecting a full source) and it drops by one per detected shot.
  * COLLECT is refused while the estimate is already at MAX_BALLS (G407).
  */
 public class Feeder {
-    public enum Mode { HOLD, COLLECT, FEED, EJECT }
+    public enum Mode { HOLD, COLLECT, FEED, EJECT, MANUAL }
 
     private final DcMotor intake, feeder;
 
     private Mode mode = Mode.HOLD;
 
+    private double manualIntake = 0.0, manualFeeder = 0.0;
     private boolean pulseOn = false;
     private double nextToggleSec = 0.0;
 
@@ -58,6 +60,13 @@ public class Feeder {
         mode = m;
     }
 
+    /** Driver control: run the intake and feeder at these powers (+ = toward the flywheel). */
+    public void setManual(double intakePower, double feederPower) {
+        mode = Mode.MANUAL;
+        manualIntake = intakePower;
+        manualFeeder = feederPower;
+    }
+
     public void update(double nowSec) {
         double in = 0.0, fd = 0.0;
         switch (mode) {
@@ -81,6 +90,10 @@ public class Feeder {
             case EJECT:
                 in = -INTAKE_EJECT_POWER;
                 fd = -FEEDER_EJECT_POWER;
+                break;
+            case MANUAL:
+                in = manualIntake;
+                fd = manualFeeder;
                 break;
         }
         intake.setPower(in);
@@ -113,5 +126,6 @@ public class Feeder {
     public int getBallEstimate() { return ballEstimate; }
     public boolean isBallCountKnown() { return ballCountKnown; }
     public Mode getMode() { return mode; }
-    public boolean isFeeding() { return mode == Mode.FEED; }
+    /** True while balls are being pushed toward the flywheel (for shot counting). */
+    public boolean isFeeding() { return mode == Mode.FEED || (mode == Mode.MANUAL && manualFeeder > 0.05); }
 }

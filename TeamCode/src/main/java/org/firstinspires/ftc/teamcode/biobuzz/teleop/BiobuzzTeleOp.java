@@ -19,31 +19,33 @@ import org.firstinspires.ftc.teamcode.biobuzz.PoseStorage;
 import org.firstinspires.ftc.teamcode.biobuzz.Robot;
 import org.firstinspires.ftc.teamcode.biobuzz.RobotConstants;
 import org.firstinspires.ftc.teamcode.biobuzz.ShotSolver;
-import org.firstinspires.ftc.teamcode.biobuzz.auto.AutoPoses;
 
 /**
- * BIOBUZZ TeleOp. Starts from the AUTO pose (PoseStorage) without resetting the Pinpoint.
- * If no AUTO ran (AUTO isn't in use yet), the drive team picks the spot where they placed the
- * robot in INIT (X/B alliance, dpad up/down start spot) and the Pinpoint is reset there.
+ * BIOBUZZ TeleOp.
+ *
+ * POSE: every INIT resets the Pinpoint and starts at x=0, y=0, heading 0. Point the robot the
+ * way "forward" should be before INIT: field-centric drive uses that heading. Because (0,0) is
+ * not a real field position, Limelight pose corrections are off and odometry-based aiming /
+ * shot distance are not field-accurate; Limelight tx aiming still works when tags are visible.
  * Nothing is commanded until START (G403: no motion in the AUTO->TELEOP transition).
  *
- * INIT: gamepad 1 Y toggles PRACTICE mode (no 2:00 shutoff; default when no AUTO ran).
+ * INIT: X / B alliance (which tags are ours), gamepad 1 Y toggles PRACTICE mode (no 2:00
+ * shutoff; default when no AUTO ran).
  *
  * GAMEPAD 1 (driver)
- *   left stick      field-centric translation (from our alliance wall's point of view)
+ *   left stick      field-centric translation (forward = the way the robot faced at INIT)
  *   right stick X   turn (manual)
  *   A               toggle AUTO-AIM: aim takes over rotation only, you keep translation
  *   Y               slow mode
- *   BACK + START    hold 1 s: re-seed pose. Square the robot into our alliance-wall /
- *                   far-wall corner first (back on the alliance wall, side on the far wall).
+ *   BACK + START    hold 1 s: reset pose to (0, 0, 0) (point the robot "forward" first).
  *
  * GAMEPAD 2 (operator)
  *   B               shooter on/off (on = solver RPM for the current distance)
  *   BACK            idle spin on/off when the shooter is off (default on)
- *   right trigger   FIRE: feeds only while canShoot (aimed + at speed + valid target)
- *   left bumper     hold with FIRE: skip the aim check (you aim by hand). Still needs RPM.
+ *   right trigger   FEEDER: spins the feeder forward, balls go up into the turret/flywheel.
+ *                   Direct control (no aim/RPM check): spin the shooter up first (B).
  *   left trigger    intake
- *   dpad down       eject (reverse intake + feeder)
+ *   dpad down       backtake / eject (reverse intake + feeder)
  *   dpad left/right RPM trim -/+ 50
  *   dpad up         we TIPPED but vision missed it: switch to the other CELL (+1 TIP)
  *   Y               ball type POLLEN / NECTAR (selects the RPM table)
@@ -58,7 +60,6 @@ public class BiobuzzTeleOp extends OpMode {
 
     private Alliance alliance = Alliance.RED;
     private boolean fromAuto = false;
-    private AutoPoses.Start startSpot = AutoPoses.Start.ALLIANCE_WALL;
 
     private boolean aimOn = false;
     private boolean slow = false;
@@ -83,14 +84,9 @@ public class BiobuzzTeleOp extends OpMode {
 
         robot = new Robot(hardwareMap, alliance, up, false);
         follower = robot.localizer.follower();
-        if (fromAuto) {
-            robot.tips.setTipCount(PoseStorage.tipCount);
-            robot.localizer.setPose(PoseStorage.pose); // no Pinpoint reset
-        } else {
-            // No AUTO ran (practice, or AUTO not in use yet): the robot is placed by hand on
-            // a start spot. Reset the Pinpoint + IMU while it's still (nothing moves).
-            robot.localizer.resetImuAndSetPose(defaultPose());
-        }
+        if (fromAuto) robot.tips.setTipCount(PoseStorage.tipCount);
+        // Always start at (0, 0, 0): reset the Pinpoint + IMU while the robot is still.
+        robot.localizer.resetImuAndSetPose(ZERO_POSE);
         robot.feeder.forgetBallCount(); // no ball sensor
         practice = !fromAuto;
     }
@@ -101,12 +97,7 @@ public class BiobuzzTeleOp extends OpMode {
             boolean changed = false;
             if (buttons.pressed("x", gamepad1.x) && alliance != Alliance.BLUE) { alliance = Alliance.BLUE; changed = true; }
             if (buttons.pressed("b", gamepad1.b) && alliance != Alliance.RED) { alliance = Alliance.RED; changed = true; }
-            if (buttons.pressed("up", gamepad1.dpad_up)) { startSpot = cycleSpot(startSpot, 1); changed = true; }
-            if (buttons.pressed("dn", gamepad1.dpad_down)) { startSpot = cycleSpot(startSpot, -1); changed = true; }
-            if (changed) {
-                robot.configure(alliance, alliance.startUpCell());
-                robot.localizer.setPose(defaultPose());
-            }
+            if (changed) robot.configure(alliance, alliance.startUpCell());
         }
         if (buttons.pressed("inity", gamepad1.y)) practice = !practice;
         double now = getRuntime();
@@ -117,17 +108,9 @@ public class BiobuzzTeleOp extends OpMode {
         telemetryM.addLine(practice
                 ? "PRACTICE MODE (G1 Y): no 2:00 shutoff. Use MATCH mode in real matches!"
                 : "MATCH MODE (G1 Y): all outputs stop 2:00 after START (G404).");
-        if (fromAuto) {
-            telemetryM.addLine("Pose from AUTO: " + fmt(PoseStorage.pose) + "  alliance " + alliance
-                    + "  up CELL " + robot.tips.getUpCell());
-        } else {
-            telemetryM.addLine("No AUTO pose: robot placed by hand.");
-            telemetryM.addLine("Alliance (X blue / B red): " + alliance);
-            telemetryM.addLine("Start spot (dpad up/down): " + startSpot + "  " + fmt(defaultPose()));
-            telemetryM.addLine("Put the robot on that spot (heading matters most). Quick test: just");
-            telemetryM.addLine("face the robot AWAY from the drivers; field-centric uses this heading.");
-            telemetryM.addLine("Or re-seed after START: G1 BACK+START in the alliance/far-wall corner.");
-        }
+        telemetryM.addLine("Alliance" + (fromAuto ? " (from AUTO): " : " (X blue / B red): ") + alliance);
+        telemetryM.addLine("Pose starts at (0, 0, 0): " + fmt(robot.localizer.getPose()));
+        telemetryM.addLine("Point the robot the way you want FORWARD to be, then keep it still.");
         telemetryM.addLine("Limelight: " + (robot.vision.isConnected() ? "connected" : "NOT CONNECTED"));
         for (String w : RobotConstants.placeholderWarnings()) telemetryM.addLine("⚠ " + w);
         telemetryM.addLine("Nothing moves until START.");
@@ -150,7 +133,8 @@ public class BiobuzzTeleOp extends OpMode {
         lastSec = now;
 
         boolean periodOk = practice || t < TELEOP_LENGTH_S;
-        ShotSolver.Solution sol = robot.sense(now, ballType, periodOk, rpmTrim, true);
+        // Pose starts at (0,0,0), not a field position: never apply Limelight pose corrections.
+        ShotSolver.Solution sol = robot.sense(now, ballType, periodOk, rpmTrim, false);
 
         // G404: nothing powered after the match ends.
         if (!periodOk) {
@@ -168,14 +152,13 @@ public class BiobuzzTeleOp extends OpMode {
         if (buttons.pressed("g1a", gamepad1.a)) { aimOn = !aimOn; robot.aimer.reset(); }
         if (buttons.pressed("g1y", gamepad1.y)) slow = !slow;
         if (buttons.heldFor("reseed", gamepad1.back && gamepad1.start, 1.0, now)) {
-            robot.localizer.setPose(reseedPose());
+            robot.localizer.setPose(ZERO_POSE);
         }
 
         double scale = slow ? TELEOP_SLOW_SCALE : 1.0;
-        // Field-centric from our alliance wall: stick up = away from our wall.
-        double sign = alliance == Alliance.RED ? 1.0 : -1.0;
-        double fwd = -gamepad1.left_stick_y * scale * sign;   // field +x for red
-        double strafe = -gamepad1.left_stick_x * scale * sign; // field +y for red
+        // Field-centric: heading 0 = the way the robot faced at INIT, so stick up = that way.
+        double fwd = -gamepad1.left_stick_y * scale;
+        double strafe = -gamepad1.left_stick_x * scale;
         double turn = -gamepad1.right_stick_x * TELEOP_TURN_SCALE * scale;
         if (aimOn) turn = robot.aimer.update(sol, dt); // aim owns rotation only
         follower.setTeleOpDrive(fwd, strafe, turn, false);
@@ -192,14 +175,12 @@ public class BiobuzzTeleOp extends OpMode {
         else if (idleOn) robot.shooter.idle();
         else robot.shooter.off();
 
-        boolean fire = gamepad2.right_trigger > 0.5;
-        boolean manualAim = gamepad2.left_bumper;
-        boolean manualOk = shooterOn && robot.shooter.isReady() && !robot.tips.inSettleWindow(now);
-        Feeder.Mode mode = Feeder.Mode.HOLD;
-        if (gamepad2.dpad_down) mode = Feeder.Mode.EJECT;
-        else if (fire && (sol.canShoot || (manualAim && manualOk))) mode = Feeder.Mode.FEED;
-        else if (gamepad2.left_trigger > 0.3) mode = Feeder.Mode.COLLECT;
-        robot.feeder.setMode(mode);
+        // Right trigger = feeder forward (into the turret), left trigger = intake, dpad down = backtake.
+        double feederPwr = gamepad2.right_trigger > 0.05 ? gamepad2.right_trigger * FEED_FEEDER_POWER : 0.0;
+        double intakePwr = gamepad2.left_trigger > 0.05 ? INTAKE_COLLECT_POWER : 0.0;
+        if (gamepad2.dpad_down) robot.feeder.setMode(Feeder.Mode.EJECT);
+        else if (feederPwr > 0 || intakePwr > 0) robot.feeder.setManual(intakePwr, feederPwr);
+        else robot.feeder.setMode(Feeder.Mode.HOLD);
 
         robot.actuate(now, dt);
         robot.savePose();
@@ -217,8 +198,9 @@ public class BiobuzzTeleOp extends OpMode {
                 robot.shooter.getMeasuredRpm(), rpmTrim, ballType));
         if (robot.shooter.getFault() != null)
             telemetryM.addLine("⚠ SHOOTER FAULT: " + robot.shooter.getFault() + "  (G2 B off clears it)");
-        telemetryM.addLine("canShoot: " + (sol.canShoot ? "YES" : "no (" + sol.whyNot + ")")
-                + (manualAim ? "  [MANUAL AIM]" : ""));
+        telemetryM.addLine(String.format("Feeder (RT) %.2f  Intake (LT) %.2f  %s", feederPwr, intakePwr,
+                gamepad2.dpad_down ? "BACKTAKE" : ""));
+        telemetryM.addLine("Aimed+ready (info only): " + (sol.canShoot ? "YES" : "no (" + sol.whyNot + ")"));
         telemetryM.addLine(String.format("TIPS %d  ~%d more to tip%s  shots %d",
                 robot.tips.getTipCount(), robot.tips.ballsToTipEstimate(),
                 robot.tips.tipLikely() ? " (TIP LIKELY)" : "", robot.shooter.getShotsDetected()));
@@ -236,19 +218,7 @@ public class BiobuzzTeleOp extends OpMode {
         }
     }
 
-    private Pose defaultPose() {
-        return alliance.fromRed(AutoPoses.start(startSpot));
-    }
-
-    private static AutoPoses.Start cycleSpot(AutoPoses.Start s, int dir) {
-        AutoPoses.Start[] v = AutoPoses.Start.values();
-        return v[((s.ordinal() + dir) % v.length + v.length) % v.length];
-    }
-
-    /** Back on our alliance wall, side on the far wall, facing away from our wall. */
-    private Pose reseedPose() {
-        return alliance.fromRed(new Pose(ROBOT_HALF_LENGTH_IN, 144.0 - ROBOT_HALF_WIDTH_IN, 0.0));
-    }
+    private static final Pose ZERO_POSE = new Pose(0.0, 0.0, 0.0);
 
     private static String fmt(Pose p) {
         return p == null ? "none" : String.format("(%.1f, %.1f, %.0f°)", p.getX(), p.getY(), Math.toDegrees(p.getHeading()));
