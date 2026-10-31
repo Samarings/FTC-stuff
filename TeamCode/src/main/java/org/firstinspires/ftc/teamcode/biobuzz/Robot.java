@@ -33,6 +33,7 @@ public class Robot {
      */
     public Robot(HardwareMap hw, Alliance alliance, CellSide initialUpCell, boolean autoInit) {
         this.alliance = alliance;
+        PidfStore.loadOnce(); // tuned gains saved by "PIDF Tuner" override RobotConstants
         localizer = new Localizer(hw);
         vision = new Vision(hw, alliance);
         shooter = new Shooter(hw);

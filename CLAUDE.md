@@ -9,9 +9,13 @@ code**. Reuse its patterns but write new BIOBUZZ code. Files prefixed `OLD` are 
 
 New code lives in `TeamCode/.../teamcode/biobuzz/`: shared classes at the top level
 (`RobotConstants`, `Robot`, `Localizer`, `Vision`, `ShotSolver`, `Aimer`/`ChassisAimer`,
-`Shooter`, `Feeder`, `TipTracker`, `Field`, `PoseStorage`), `auto/` (engine
-`BiobuzzAutoBase` + one OpMode per route, poses in `AutoPoses`), `teleop/BiobuzzTeleOp`,
-`calibration/` (Shooter Tuning, Localization Test, Vision Check).
+`Shooter`, `Feeder`, `Turret`, `TipTracker`, `HeadingHold`, `PidfStore`, `Field`,
+`PoseStorage`), `auto/` (engine `BiobuzzAutoBase` + one OpMode per route, poses in
+`AutoPoses`), `teleop/BiobuzzTeleOp`, `calibration/` (Shooter Tuning, Localization Test,
+Vision Check, Turret Calibration, Motor Test, PIDF Tuner).
+
+Tuned PIDF gains saved by PIDF Tuner live in `/sdcard/FIRST/biobuzz_pidf.txt` on the Control
+Hub and OVERRIDE `RobotConstants` while that file exists.
 
 ## Read on demand (don't load unless the task needs it)
 

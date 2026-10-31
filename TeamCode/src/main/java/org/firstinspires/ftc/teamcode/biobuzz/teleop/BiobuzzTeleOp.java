@@ -15,6 +15,8 @@ import org.firstinspires.ftc.teamcode.biobuzz.Buttons;
 import org.firstinspires.ftc.teamcode.biobuzz.CellSide;
 import org.firstinspires.ftc.teamcode.biobuzz.Feeder;
 import org.firstinspires.ftc.teamcode.biobuzz.FieldDraw;
+import org.firstinspires.ftc.teamcode.biobuzz.HeadingHold;
+import org.firstinspires.ftc.teamcode.biobuzz.PidfStore;
 import org.firstinspires.ftc.teamcode.biobuzz.PoseStorage;
 import org.firstinspires.ftc.teamcode.biobuzz.Robot;
 import org.firstinspires.ftc.teamcode.biobuzz.RobotConstants;
@@ -37,6 +39,7 @@ import org.firstinspires.ftc.teamcode.biobuzz.ShotSolver;
  *   right stick X   turn (manual)
  *   A               toggle AUTO-AIM: aim takes over rotation only, you keep translation
  *   Y               slow mode
+ *   X               heading hold on/off (PIDF on the Pinpoint heading when you're not turning)
  *   BACK + START    hold 1 s: reset pose to (0, 0, 0) (point the robot "forward" first).
  *
  * GAMEPAD 2 (operator)
@@ -62,6 +65,8 @@ public class BiobuzzTeleOp extends OpMode {
     private boolean fromAuto = false;
 
     private boolean aimOn = false;
+    private final HeadingHold headingHold = new HeadingHold();
+    private boolean holdOn = HEADING_HOLD_ENABLED;
     private boolean slow = false;
     private boolean shooterOn = false;
     private boolean idleOn = true;
@@ -112,6 +117,7 @@ public class BiobuzzTeleOp extends OpMode {
         telemetryM.addLine("Pose starts at (0, 0, 0): " + fmt(robot.localizer.getPose()));
         telemetryM.addLine("Point the robot the way you want FORWARD to be, then keep it still.");
         telemetryM.addLine("Limelight: " + (robot.vision.isConnected() ? "connected" : "NOT CONNECTED"));
+        telemetryM.addLine("PIDF gains: " + PidfStore.status());
         for (String w : RobotConstants.placeholderWarnings()) telemetryM.addLine("⚠ " + w);
         telemetryM.addLine("Nothing moves until START.");
         telemetryM.update(telemetry);
@@ -153,14 +159,24 @@ public class BiobuzzTeleOp extends OpMode {
         if (buttons.pressed("g1y", gamepad1.y)) slow = !slow;
         if (buttons.heldFor("reseed", gamepad1.back && gamepad1.start, 1.0, now)) {
             robot.localizer.setPose(ZERO_POSE);
+            headingHold.release(); // re-lock on the new heading
         }
+        if (buttons.pressed("g1x", gamepad1.x)) { holdOn = !holdOn; headingHold.release(); }
 
         double scale = slow ? TELEOP_SLOW_SCALE : 1.0;
         // Field-centric: heading 0 = the way the robot faced at INIT, so stick up = that way.
         double fwd = -gamepad1.left_stick_y * scale;
         double strafe = -gamepad1.left_stick_x * scale;
-        double turn = -gamepad1.right_stick_x * TELEOP_TURN_SCALE * scale;
-        if (aimOn) turn = robot.aimer.update(sol, dt); // aim owns rotation only
+        double driverTurn = -gamepad1.right_stick_x * TELEOP_TURN_SCALE * scale;
+        double turn;
+        if (aimOn) {
+            turn = robot.aimer.update(sol, dt); // aim owns rotation only
+            headingHold.release();
+        } else if (holdOn) {
+            turn = headingHold.update(robot.localizer.getHeadingDeg(), robot.localizer.getTurnRateDeg(), driverTurn, now, dt);
+        } else {
+            turn = driverTurn;
+        }
         follower.setTeleOpDrive(fwd, strafe, turn, false);
 
         // ---------------- operator
@@ -191,6 +207,8 @@ public class BiobuzzTeleOp extends OpMode {
                 : String.format("%s | %d:%02d left%s", alliance, (int) left / 60, (int) left % 60,
                 left <= 60 ? "  FLOWERS OPEN (NECTAR ok)" : "  (no NECTAR in FLOWERS yet: G410)"));
         telemetryM.addLine("AIM " + (aimOn ? "ON" : "off") + "  slow " + slow + "  " + robot.aimer.name());
+        telemetryM.addLine(String.format("Heading hold (G1 X) %s%s", holdOn ? "ON" : "off",
+                headingHold.isHolding() ? String.format("  target %.1f° err %.1f°", headingHold.getTargetDeg(), headingHold.getErrorDeg()) : ""));
         telemetryM.addLine(String.format("Target %s CELL  dist=%.1f in  aimErr=%.1f° (%s) tol=%.1f°",
                 sol.upCell, sol.distanceIn, sol.aimErrDeg, sol.visionAim ? "LL" : "odom", sol.toleranceDeg));
         telemetryM.addLine(String.format("Shooter %s  RPM tgt/meas %.0f / %.0f  trim %+.0f  %s",

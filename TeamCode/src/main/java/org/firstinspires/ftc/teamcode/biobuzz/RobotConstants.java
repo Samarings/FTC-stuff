@@ -291,6 +291,26 @@ public class RobotConstants {
     public static double TELEOP_LENGTH_S = 120.0;
 
     // =====================================================================================
+    // HEADING HOLD (TeleOp): PIDF on the Pinpoint heading while the driver isn't turning.
+    // Output is a turn command (+ = counter-clockwise). PLACEHOLDER gains: tune with "PIDF Tuner".
+    // =====================================================================================
+    public static boolean HEADING_HOLD_ENABLED = true;
+    public static double HOLD_KP = 0.02;            // turn power per degree of error
+    public static double HOLD_KI = 0.0;             // per degree-second
+    public static double HOLD_KD = 0.001;           // per degree/second
+    /** Static-friction feedforward: added as sign(error) * HOLD_KF outside the deadband. */
+    public static double HOLD_KF = 0.0;
+    public static double HOLD_INTEGRAL_CLAMP = 20.0; // degree-seconds
+    public static double HOLD_DEADBAND_DEG = 0.75;
+    public static double HOLD_MAX_POWER = 0.5;
+    /** Driver turn stick below this counts as "not turning". */
+    public static double HOLD_STICK_DEADBAND = 0.05;
+    /** After the stick is released, lock the heading once turning slows below this... */
+    public static double HOLD_CAPTURE_RATE_DEG_S = 30.0;
+    /** ...or after this long, whichever comes first. */
+    public static double HOLD_CAPTURE_DELAY_S = 0.3;
+
+    // =====================================================================================
 
     /** Hard-clamped flywheel cap: RPM_CAP, but never above the motor's 6000. */
     public static double rpmCap() {
