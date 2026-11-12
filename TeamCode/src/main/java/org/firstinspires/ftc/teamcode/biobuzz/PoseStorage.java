@@ -17,7 +17,7 @@ public final class PoseStorage {
     /** System.nanoTime() when saved; TeleOp ignores very old data. */
     public static long savedAtNanos = 0;
 
-    /** Turret encoder home, for the rotating turret later (unused while TURRET_FIXED). */
+    /** Turret encoder home from AUTO INIT, so TeleOp keeps the same 0° (it must not re-zero). */
     public static Integer turretHomeTicks = null;
 
     public static void save(Pose p, Alliance a, CellSide up, int tips) {

@@ -8,23 +8,47 @@ code**. Reuse its patterns but write new BIOBUZZ code. Files prefixed `OLD` are 
 ## BIOBUZZ code location
 
 New code lives in `TeamCode/.../teamcode/biobuzz/`: shared classes at the top level
-(`RobotConstants`, `Robot`, `Localizer`, `Vision`, `ShotSolver`, `Aimer`/`ChassisAimer`,
-`Shooter`, `Feeder`, `Turret`, `TipTracker`, `HeadingHold`, `PidfStore`, `Field`,
-`PoseStorage`), `auto/` (engine `BiobuzzAutoBase` + one OpMode per route, poses in
-`AutoPoses`), `teleop/BiobuzzTeleOp`, `calibration/` (Shooter Tuning, Localization Test,
-Vision Check, Turret Calibration, Motor Test, PIDF Tuner).
+(`RobotConstants`, `Robot`, `Localizer`, `Vision`, `ShotSolver`,
+`Aimer`/`ChassisAimer`/`TurretAimer`, `Shooter`, `Feeder`, `Turret`, `TipTracker`,
+`HeadingHold`, `PidfStore`, `Field`, `PoseStorage`), `auto/` (engine `BiobuzzAutoBase` +
+one OpMode per route, poses in `AutoPoses`), `teleop/BiobuzzTeleOp`, `calibration/`
+(Shooter Tuning, Localization Test, Vision Check, Turret Calibration, Turret PIDF Tuner,
+Motor Test, PIDF Tuner).
+
+Off-robot check of the turret lock (limits, flip, tag fallbacks, latency) against a
+simulated motor and camera: `bash TeamCode/src/test/run-turret-sim.sh`. Run it after
+changing `Turret`, `Vision.centerOf` or `ShotSolver.aimDirectionDeg`.
 
 Tuned PIDF gains saved by PIDF Tuner live in `/sdcard/FIRST/biobuzz_pidf.txt` on the Control
 Hub and OVERRIDE `RobotConstants` while that file exists.
 
 ## Read on demand (don't load unless the task needs it)
 
-- `docs/biobuzz/TURRET_LIMELIGHT_BRIEF.md`: turret and Limelight geometry from CAD,
+- **`docs/biobuzz/UNDERHAND_BRIEF.md`: the CURRENT design.** It covers the underhand
+  turret, camera pose, ±225° + 360° flip, controls, 4/2-tag aiming, PIDF tuner and
+  distance→RPM. It overrides the hardware and turret parts of the older brief.
+- `docs/biobuzz/TURRET_LIMELIGHT_BRIEF.md`: older hooded design (geometry superseded);
+  still the reference for field coordinates, localization, the shot solver, TIP
+  tracking, the AUTO plan and rules. Original description: turret and Limelight
+  geometry from CAD,
   the shot solver, the full **AUTO plan**, field coordinates, what to reuse or change
   from DECODE.
 - `docs/biobuzz/BIOBUZZ_RULES.md`: full game rules summary (manual TU07).
 
-## ⚠ TEMPORARY: turret is FIXED
+## Turret: rotating design now specified
+
+The team's underhand design has a **rotating turret** (`UNDERHAND_BRIEF.md`):
+- goBILDA 312 RPM motor + goBILDA turret.
+- ±225° travel with a 360° flip.
+- G2 left-stick press toggles auto/manual; left stick x for manual.
+- Limelight PIDF aim at the cluster center (4 tags, else 2).
+
+`TurretAimer` implements that brief (written, not yet run on the robot). Keep
+`TURRET_FIXED = true` until the turret ticks/deg is calibrated, then switch it to false,
+re-enter the Limelight camera pose relative to the turret axis (`Vision.java` header)
+and tune the gains with Turret PIDF Tuner.
+
+### Previous temporary mode (still the default until calibrated)
 
 `RobotConstants.TURRET_FIXED = true`. Treat the shooter + Limelight as bolted to the
 chassis facing forward, and **aim by turning the whole robot** (DECODE-style chassis
@@ -36,23 +60,30 @@ aim, driver keeps translation).
   already included), so don't subtract `TURRET_AXIS_OFFSET` from MegaTag2 again.
 - AUTO paths end facing the target.
 
-Build aiming behind an `Aimer` interface (`ChassisAimer` now, `TurretAimer` later) so
-the rotating turret returns by flipping the flag. Don't delete the turret design.
+Aiming sits behind the `Aimer` interface (`ChassisAimer` while fixed, `TurretAimer` when
+rotating), picked by the flag. Don't delete either.
 Details: brief, section "TEMPORARY: treat the turret as FIXED".
 
 ## Must-know facts
 
-- **New robot.** A turret on a ring bearing with a fixed-hood flywheel shooter (one
-  goBILDA 5203). The Limelight 3A is mounted **on the turret**: 116.5 mm in front of
-  the yaw axis, on the centerline, pitched **+37°**, lens ≈ **0.354 m** above the
-  floor (estimate). Robot + turret ≈ 16 in tall.
+- **New robot: the underhand design** (Onshape "underhand maybe").
+  - A turret on a ring bearing, one shooter wheel (Ø97.8 mm) on a goBILDA 5203; the
+    wheel isn't placed in CAD yet.
+  - The Limelight 3A sits on the **LL Mount (Part 1 <4>) at the back of the turret**,
+    on the centerline, facing CAD +Y.
+  - Camera numbers: **pitched +20°**, ≈ 0.094 m from the yaw axis, lens ≈ **0.325 m**
+    above the floor (estimate). Robot + turret ≈ 16 in tall.
+  - **The shot leaves in the camera's direction** (confirmed), so tx = 0 on the cluster
+    center = aimed.
 - **Flywheel.** Hard max 6000 RPM; clamp to `RPM_CAP = 3500` by default. Use separate
   RPM tables for POLLEN (2.8 in ball) and NECTAR (3.6 in). All RPM numbers are tunable
   constants; the team will edit them.
 - **Turret rotation limits (wiring safety, non-negotiable).** No slip ring: the
   Limelight USB and the flywheel motor's cables cross the turret joint.
   - Track the turret angle **unwrapped** from a home mark, and never wrap it to ±180.
-  - Soft limits default to **±150°** until measured; total travel stays < 360°.
+  - Limits are **±225°** from the start position (team spec). Past a limit while
+    tracking, **flip 360°** to the equivalent angle (no shooting during the flip).
+    Manual mode never flips. This replaces the old ±150° / < 360° rule.
   - All aiming goes through `Turret.chooseSetpoint()`. Out-of-range targets clamp and
     block shooting.
   - `Turret.update()` zeroes power past the limits in every mode, slows near them, and
@@ -104,8 +135,8 @@ Details: brief, section "TEMPORARY: treat the turret as FIXED".
   4 pre-loads = an AUTO TIP.
 - **Unknown values:** don't block on them, and don't invent numbers.
   - Use named placeholders in `RobotConstants`: turret ticks/deg (auto-aim disabled
-    until set), turret limits ±150°, `TURRET_AXIS_OFFSET` (0, 0), camera height
-    0.354 m, Pinpoint offsets from `Constants.java`, CELL field positions (the
+    until set; 312 RPM motor = 537.7 counts per output rev × unknown turret ratio),
+    turret limits ±225°, `TURRET_AXIS_OFFSET` (0, 0), camera height 0.325 m, Pinpoint offsets from `Constants.java`, CELL field positions (the
     brief's CELL y values conflict with its 18.8 in spacing; confirm from field CAD).
   - Write calibration OpModes to measure them (brief: "Unknown values").
   - RPM is always motor-encoder RPM, so the flywheel gear ratio isn't needed.

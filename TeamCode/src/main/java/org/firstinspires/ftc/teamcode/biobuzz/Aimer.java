@@ -3,13 +3,11 @@ package org.firstinspires.ftc.teamcode.biobuzz;
 /**
  * Turns a ShotSolver solution into motion that points the shooter at the target.
  *
- *  - {@link ChassisAimer} (now, TURRET_FIXED = true): turns the whole robot.
- *  - TurretAimer (later): will call Turret.chooseSetpoint() (already written, with the
- *    cable-wrap limits) and return 0 chassis turn. Not written yet on purpose: the turret is
- *    locked for now.
+ *  - {@link TurretAimer} (TURRET_FIXED = false): rotates the turret via
+ *    Turret.chooseSetpoint(); returns 0 chassis turn, the driver keeps the whole drivetrain.
+ *  - {@link ChassisAimer} (TURRET_FIXED = true): turns the whole robot.
  *
- * AUTO, TeleOp and the solver only talk to this interface, so switching back to the rotating
- * turret is the flag plus the new class.
+ * AUTO, TeleOp and the solver only talk to this interface.
  */
 public interface Aimer {
     /**
@@ -24,10 +22,7 @@ public interface Aimer {
     String name();
 
     /** Build the aimer selected by RobotConstants.TURRET_FIXED. */
-    static Aimer create() {
-        if (!RobotConstants.TURRET_FIXED) {
-            throw new IllegalStateException("Rotating turret aiming (TurretAimer) is not written yet: keep TURRET_FIXED = true");
-        }
-        return new ChassisAimer();
+    static Aimer create(Turret turret) {
+        return RobotConstants.TURRET_FIXED ? new ChassisAimer() : new TurretAimer(turret);
     }
 }

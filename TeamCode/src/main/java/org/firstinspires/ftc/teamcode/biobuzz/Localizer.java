@@ -94,7 +94,9 @@ public class Localizer {
     public double getVelX() { return follower.getVelocity().getXComponent(); }
     public double getVelY() { return follower.getVelocity().getYComponent(); }
     /** Turn rate, deg/s (absolute). */
-    public double getTurnRateDeg() { return Math.abs(Math.toDegrees(follower.getAngularVelocity())); }
+    public double getTurnRateDeg() { return Math.abs(getYawRateDeg()); }
+    /** Turn rate, deg/s, signed (+ = counter-clockwise). */
+    public double getYawRateDeg() { return Math.toDegrees(follower.getAngularVelocity()); }
 
     // =================================================================== VISION CORRECTIONS
 
@@ -135,7 +137,7 @@ public class Localizer {
         if (fix.stalenessMs > VISION_MAX_STALENESS_MS) return "STALE";
         if (getSpeed() > VISION_MAX_SPEED_IN_S) return "MOVING";
         if (getTurnRateDeg() > VISION_MAX_TURN_RATE_DEG_S) return "TURNING";
-        // TURRET_FIXED: no turret turn-rate gate.
+        // (Turret turn rate: Robot.sense() withholds the fix while the turret is turning fast.)
         if (tips != null && tips.hiveRecentlyMoved(nowSec)) return "HIVE_MOVING";
         double x = fix.pose.getX(), y = fix.pose.getY();
         if (!Field.insideField(x, y)) return "OUTSIDE_FIELD";

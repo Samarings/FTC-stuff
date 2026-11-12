@@ -23,6 +23,11 @@ public class Robot {
     public final Aimer aimer;
 
     public ShotSolver.Solution solution;
+    /**
+     * Set false when the pose is not a real field position (TeleOp starts at 0,0,0): the
+     * target is then located from the tags instead of the field map (see ShotSolver).
+     */
+    public boolean fieldPose = true;
     private int lastShots = 0;
     private int newShotsThisLoop = 0;
 
@@ -42,7 +47,7 @@ public class Robot {
         turret = new Turret(hw, savedHome);
         tips = new TipTracker(alliance, initialUpCell);
         solver = new ShotSolver(alliance);
-        aimer = Aimer.create();
+        aimer = Aimer.create(turret);
         lastShots = shooter.getShotsDetected();
     }
 
@@ -58,14 +63,24 @@ public class Robot {
     public ShotSolver.Solution sense(double nowSec, BallType ball, boolean periodAllowsShots,
                                      double rpmTrim, boolean allowVisionApply) {
         localizer.update(nowSec);
-        vision.update(localizer.getHeadingDeg(), turret.getAimAngleDeg() /* 0 while locked */, nowSec);
+        turret.read(nowSec);
+        turret.setRobotYawRate(localizer.getYawRateDeg());
+        double turretDeg = turret.getAimAngleDeg(); // 0 while locked
+        vision.update(localizer.getHeadingDeg(), turretDeg, nowSec);
         tips.update(vision, nowSec);
-        localizer.offerVision(vision.getPoseFix(), tips, allowVisionApply, nowSec);
+        // The camera rides on the turret: no pose fixes while it is turning fast.
+        boolean turretSteady = Math.abs(turret.getRateDegS()) <= RobotConstants.VISION_MAX_TURRET_RATE_DEG_S;
+        localizer.offerVision(turretSteady ? vision.getPoseFix() : null, tips, allowVisionApply, nowSec);
         int balls = feeder.isBallCountKnown() ? feeder.getBallEstimate() : -1;
-        solution = solver.solve(localizer, vision, tips, shooter, ball, balls, periodAllowsShots, rpmTrim, nowSec);
+        solution = solver.solve(localizer, vision, tips, shooter, turretDeg, fieldPose,
+                ball, balls, periodAllowsShots, rpmTrim, nowSec);
         if (!RobotConstants.TURRET_FIXED && solution.canShoot) {
-            if (turret.getFault() != null) { solution.canShoot = false; solution.whyNot = "TURRET FAULT " + turret.getFault(); }
-            else if (!turret.canReach()) { solution.canShoot = false; solution.whyNot = "TARGET OUT OF TURRET RANGE"; }
+            String why = turret.getFault() != null ? "TURRET FAULT " + turret.getFault()
+                    : turret.isFlipping() ? "TURRET FLIPPING"
+                    : !turret.canReach() ? "TARGET OUT OF TURRET RANGE"
+                    : Math.abs(turret.getRateDegS()) > RobotConstants.TURRET_AIMED_MAX_RATE_DEG_S ? "TURRET MOVING"
+                    : null;
+            if (why != null) { solution.canShoot = false; solution.whyNot = why; }
         }
         return solution;
     }

@@ -1,5 +1,11 @@
 # Turret + Limelight 3A brief (FTC BIOBUZZ 2026-27)
 
+> **Superseded hardware:** the robot is now the **underhand design**; see
+> `UNDERHAND_BRIEF.md`. That file overrides this one for CAD/hardware, camera pose,
+> turret limits (now ±225° with a 360° flip), turret controls and aiming. Everything
+> else here (field coordinates, localization, shot solver, TIP tracking, AUTO, rules,
+> DECODE reuse) still applies.
+
 Context for Claude Code: we are writing Limelight 3A code for our turret shooter.
 Everything under "Hardware (from CAD)" was measured from our Onshape assembly
 ("Turret maybe" → Assembly 1). Items marked **TODO** are unknown and must be asked

@@ -28,8 +28,14 @@ import org.firstinspires.ftc.teamcode.biobuzz.ShotSolver;
  * POSE: every INIT resets the Pinpoint and starts at x=0, y=0, heading 0. Point the robot the
  * way "forward" should be before INIT: field-centric drive uses that heading. Because (0,0) is
  * not a real field position, Limelight pose corrections are off and odometry-based aiming /
- * shot distance are not field-accurate; Limelight tx aiming still works when tags are visible.
+ * shot distance are not field-accurate; Limelight aiming still works when tags are visible.
  * Nothing is commanded until START (G403: no motion in the AUTO->TELEOP transition).
+ *
+ * TURRET (TURRET_FIXED = false): starts in AUTO aim. Once the camera has seen 2+ tags of our
+ * up CELL's cluster it locks on, keeps pointing at it while the robot drives and turns, and
+ * flips 360° when it reaches ±225°. If the tags drop out, odometry keeps it on the spot where
+ * they were last seen. Before the first sighting it holds its angle: face the HIVE or use
+ * MANUAL. The turret keeps AUTO's zero; without an AUTO it must be on its home mark at INIT.
  *
  * INIT: X / B alliance (which tags are ours), gamepad 1 Y toggles PRACTICE mode (no 2:00
  * shutoff; default when no AUTO ran).
@@ -37,7 +43,7 @@ import org.firstinspires.ftc.teamcode.biobuzz.ShotSolver;
  * GAMEPAD 1 (driver)
  *   left stick      field-centric translation (forward = the way the robot faced at INIT)
  *   right stick X   turn (manual)
- *   A               toggle AUTO-AIM: aim takes over rotation only, you keep translation
+ *   A               TURRET_FIXED only: toggle chassis AUTO-AIM (aim takes over rotation only)
  *   Y               slow mode
  *   X               heading hold on/off (PIDF on the Pinpoint heading when you're not turning)
  *   BACK + START    hold 1 s: reset pose to (0, 0, 0) (point the robot "forward" first).
@@ -52,6 +58,9 @@ import org.firstinspires.ftc.teamcode.biobuzz.ShotSolver;
  *   dpad left/right RPM trim -/+ RPM_ADJUST_STEP (50)
  *   dpad up         we TIPPED but vision missed it: switch to the other CELL (+1 TIP)
  *   Y               ball type POLLEN / NECTAR (selects the RPM table)
+ *   left stick press  turret AUTO aim <-> MANUAL (also clears a turret STALL fault)
+ *   left stick X    MANUAL turret: stick right = turret clockwise seen from above. Stops at
+ *                   ±225°, never flips.
  */
 @TeleOp(name = "BIOBUZZ TeleOp", group = "BIOBUZZ")
 public class BiobuzzTeleOp extends OpMode {
@@ -65,6 +74,7 @@ public class BiobuzzTeleOp extends OpMode {
     private boolean fromAuto = false;
 
     private boolean aimOn = false;
+    private boolean turretAuto = true;
     private final HeadingHold headingHold = new HeadingHold();
     private boolean holdOn = HEADING_HOLD_ENABLED;
     private boolean slow = false;
@@ -92,6 +102,7 @@ public class BiobuzzTeleOp extends OpMode {
         if (fromAuto) robot.tips.setTipCount(PoseStorage.tipCount);
         // Always start at (0, 0, 0): reset the Pinpoint + IMU while the robot is still.
         robot.localizer.resetImuAndSetPose(ZERO_POSE);
+        robot.fieldPose = false; // (0,0,0) is not a field position: aim from the tags only
         robot.feeder.forgetBallCount(); // no ball sensor
         practice = !fromAuto;
     }
@@ -107,9 +118,12 @@ public class BiobuzzTeleOp extends OpMode {
         if (buttons.pressed("inity", gamepad1.y)) practice = !practice;
         double now = getRuntime();
         robot.localizer.updatePoseOnly(now);
-        robot.vision.update(robot.localizer.getHeadingDeg(), 0.0, now);
+        robot.turret.read(now); // encoder only (after AUTO the turret is usually not at 0°)
+        robot.vision.update(robot.localizer.getHeadingDeg(), robot.turret.getAimAngleDeg(), now);
 
         telemetryM.addLine("=== BIOBUZZ TeleOp ===");
+        if (!TURRET_FIXED) telemetryM.addLine(fromAuto ? robot.turret.describe() + "  (zero kept from AUTO)"
+                : "⚠ No AUTO ran: the turret must be ON ITS HOME MARK now (this is 0°).");
         telemetryM.addLine(practice
                 ? "PRACTICE MODE (G1 Y): no 2:00 shutoff. Use MATCH mode in real matches!"
                 : "MATCH MODE (G1 Y): all outputs stop 2:00 after START (G404).");
@@ -159,6 +173,7 @@ public class BiobuzzTeleOp extends OpMode {
         if (buttons.pressed("g1y", gamepad1.y)) slow = !slow;
         if (buttons.heldFor("reseed", gamepad1.back && gamepad1.start, 1.0, now)) {
             robot.localizer.setPose(ZERO_POSE);
+            robot.solver = new ShotSolver(alliance); // the remembered target was in the old pose frame
             headingHold.release(); // re-lock on the new heading
         }
         if (buttons.pressed("g1x", gamepad1.x)) { holdOn = !holdOn; headingHold.release(); }
@@ -169,7 +184,7 @@ public class BiobuzzTeleOp extends OpMode {
         double strafe = -gamepad1.left_stick_x * scale;
         double driverTurn = -gamepad1.right_stick_x * TELEOP_TURN_SCALE * scale;
         double turn;
-        if (aimOn) {
+        if (aimOn && TURRET_FIXED) {
             turn = robot.aimer.update(sol, dt); // aim owns rotation only
             headingHold.release();
         } else if (holdOn) {
@@ -186,6 +201,13 @@ public class BiobuzzTeleOp extends OpMode {
         if (buttons.pressed("g2l", gamepad2.dpad_left)) rpmTrim -= RPM_ADJUST_STEP;
         if (buttons.pressed("g2r", gamepad2.dpad_right)) rpmTrim += RPM_ADJUST_STEP;
         if (buttons.pressed("g2up", gamepad2.dpad_up)) robot.tips.manualFlip(now, true);
+
+        // Turret: left stick press toggles AUTO aim / MANUAL; both go through the Turret limits.
+        if (!TURRET_FIXED) {
+            if (buttons.pressed("g2ls", gamepad2.left_stick_button)) { turretAuto = !turretAuto; robot.turret.clearFault(); }
+            if (turretAuto) robot.aimer.update(sol, dt);
+            else robot.turret.setManualPower(Math.abs(gamepad2.left_stick_x) > 0.05 ? -gamepad2.left_stick_x : 0.0); // stick right = clockwise
+        }
 
         if (shooterOn) robot.shooter.setTargetRpm(sol.rpm);
         else if (idleOn) robot.shooter.idle();
@@ -206,7 +228,9 @@ public class BiobuzzTeleOp extends OpMode {
         telemetryM.addLine(practice ? String.format("%s | PRACTICE  t=%.0f s", alliance, t)
                 : String.format("%s | %d:%02d left%s", alliance, (int) left / 60, (int) left % 60,
                 left <= 60 ? "  FLOWERS OPEN (NECTAR ok)" : "  (no NECTAR in FLOWERS yet: G410)"));
-        telemetryM.addLine("AIM " + (aimOn ? "ON" : "off") + "  slow " + slow + "  " + robot.aimer.name());
+        telemetryM.addLine(TURRET_FIXED ? "AIM " + (aimOn ? "ON" : "off") + "  slow " + slow + "  " + robot.aimer.name()
+                : "TURRET " + (turretAuto ? "AUTO" : "MANUAL") + " (G2 left stick press)  slow " + slow);
+        if (!TURRET_FIXED) telemetryM.addLine(robot.turret.describe());
         telemetryM.addLine(String.format("Heading hold (G1 X) %s%s", holdOn ? "ON" : "off",
                 headingHold.isHolding() ? String.format("  target %.1f° err %.1f°", headingHold.getTargetDeg(), headingHold.getErrorDeg()) : ""));
         telemetryM.addLine(String.format("Target %s CELL  dist=%.1f in  aimErr=%.1f° (%s) tol=%.1f°",

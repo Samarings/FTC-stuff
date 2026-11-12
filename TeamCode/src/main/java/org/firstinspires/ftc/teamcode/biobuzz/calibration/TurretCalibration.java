@@ -14,8 +14,8 @@ import org.firstinspires.ftc.teamcode.biobuzz.Buttons;
  * Measures the turret's TURRET_TICKS_PER_DEG, direction and cable limits. The motor is set to
  * FLOAT and is NEVER powered: you turn the turret BY HAND.
  *
- * The turret is normally locked (TURRET_FIXED). For this test only: robot on blocks, ALL
- * cables connected, take the lock pin out, then put it back on the home mark when done.
+ * Robot on blocks, ALL cables connected. Run this before setting TURRET_FIXED = false: the
+ * turret is never powered until TURRET_TICKS_PER_DEG is set.
  *
  * Steps (gamepad 1):
  *   A   turret on its HOME mark (camera facing robot-forward) -> set home
@@ -25,7 +25,10 @@ import org.firstinspires.ftc.teamcode.biobuzz.Buttons;
  *   LB  turned CCW until a cable just gets tight -> record the + cable limit
  *   RB  turned CW until a cable just gets tight  -> record the - cable limit
  *       -> suggested soft limits = cable limits minus TURRET_CAL_SAFETY_MARGIN_DEG
- * Type the results into RobotConstants. Re-check after any wiring change.
+ *       The code uses ±225° (team spec): the cables must still be loose at ±225° on the live
+ *       angle readout. If they get tight earlier, lower TURRET_MIN_DEG / TURRET_MAX_DEG.
+ * Type the results into RobotConstants (TURRET_TICKS_PER_DEG, TURRET_REVERSED, limits), then
+ * set TURRET_FIXED = false. Re-check after any wiring change.
  */
 @TeleOp(name = "Turret Calibration", group = "Calibration")
 public class TurretCalibration extends OpMode {
@@ -74,7 +77,7 @@ public class TurretCalibration extends OpMode {
         }
 
         telemetry.addLine("TURRET CALIBRATION (hand-turn only, motor never powered)");
-        telemetry.addLine("Robot on blocks, cables connected, lock pin OUT for this test.");
+        telemetry.addLine("Robot on blocks, ALL cables connected.");
         telemetry.addData("Raw ticks", t);
         telemetry.addData("Home ticks (A)", home == null ? "not set: put turret on mark, press A" : home.toString());
 
@@ -101,8 +104,10 @@ public class TurretCalibration extends OpMode {
                 telemetry.addData("- cable limit (RB)", fmt(minus));
                 if (plus != null) telemetry.addData("=> TURRET_MAX_DEG", String.format("%.0f", plus - TURRET_CAL_SAFETY_MARGIN_DEG));
                 if (minus != null) telemetry.addData("=> TURRET_MIN_DEG", String.format("%.0f", minus + TURRET_CAL_SAFETY_MARGIN_DEG));
-                if (plus != null && minus != null && (plus - minus) >= 360)
-                    telemetry.addLine("⚠ Cable travel ≥ 360°: keep soft-limit travel UNDER 360° unless the team confirms otherwise.");
+                if ((plus != null && plus - TURRET_CAL_SAFETY_MARGIN_DEG < TURRET_MAX_DEG)
+                        || (minus != null && minus + TURRET_CAL_SAFETY_MARGIN_DEG > TURRET_MIN_DEG))
+                    telemetry.addLine("⚠ Cables get tight inside the current limits (" + TURRET_MIN_DEG + " / "
+                            + TURRET_MAX_DEG + "): use the => values above. The 360° flip needs at least ±180°.");
             }
         } else {
             telemetry.addLine("Live angle: set home (A) and measure ticks/deg (X, B) first.");
@@ -110,7 +115,7 @@ public class TurretCalibration extends OpMode {
         telemetry.addLine("Currently in RobotConstants: ticks/deg=" + TURRET_TICKS_PER_DEG
                 + "  limits " + TURRET_MIN_DEG + " / " + TURRET_MAX_DEG
                 + "  TURRET_FIXED=" + TURRET_FIXED);
-        telemetry.addLine("When done: turret back on the home mark, lock pin IN.");
+        telemetry.addLine("When done: turret back on the home mark (0° = camera facing robot-forward).");
         telemetry.update();
     }
 

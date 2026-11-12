@@ -24,25 +24,48 @@ import java.util.Map;
  * visible cluster. Our alliance's IDs are picked out here, in code, for aiming and TIP
  * detection.
  *
- * Limelight web UI setup (fixed turret): "camera pose in robot space" relative to the robot
- * center on the floor: forward = TURRET_AXIS_OFFSET_FWD + 0.1165 m, side =
- * TURRET_AXIS_OFFSET_LEFT, up = CAMERA_HEIGHT_M, pitch +37°. MegaTag2 then returns the robot
- * center directly (don't subtract the turret offset again).
+ * Limelight web UI setup, "camera pose in robot space" (underhand design: lens 0.094 m in
+ * front of the turret yaw axis, CAMERA_HEIGHT_M = 0.325 m above the tiles, pitch +20°):
+ *  - Rotating turret (TURRET_FIXED = false): relative to the TURRET AXIS on the floor:
+ *    forward 0.094 m, side 0, up 0.325 m, pitch +20°. MegaTag2 then returns the turret axis,
+ *    and update() shifts it to the robot center with TURRET_AXIS_OFFSET.
+ *  - Fixed turret: relative to the ROBOT CENTER on the floor: forward = TURRET_AXIS_OFFSET_FWD
+ *    + 0.094 m, side = TURRET_AXIS_OFFSET_LEFT, up 0.325 m, pitch +20°. MegaTag2 returns the
+ *    robot center directly.
+ *
+ * Cluster center (the aim point): the 4 tags of a cluster sit at -6.5, -2.75, +2.75, +6.5 in
+ * along the strip, in ID order (or exactly reversed, which gives the same center). With all 4
+ * visible the center is their average; with 2 or 3 it is worked out from the known spacing of
+ * the visible tags; 1 tag is not enough to aim (the solver falls back to odometry).
  */
 public class Vision {
+
+    /** Tag positions along the cluster strip, from its center, inches (manual Fig. 9-15). */
+    static final double[] STRIP_IN = {-6.5, -2.75, 2.75, 6.5};
 
     /** What we can see of one CELL's tag cluster this frame. */
     public static class ClusterView {
         public int tagCount = 0;
-        /** Average horizontal angle of the visible tags (deg, + = target right of center). */
+        /** Cluster CENTER, horizontal angle from the crosshair (deg, + = right). 1 tag: that tag. */
         public double txDeg = 0.0;
+        /** Cluster center, vertical angle from the crosshair (deg, + = up). */
         public double tyDeg = 0.0;
         /** Horizontal distance from the turret axis to the cluster, inches (NaN if unknown). */
         public double distanceIn = Double.NaN;
         public boolean usedPose3d = false;
         int pose3dCount = 0;
+        // per tag, indexed by position along the strip (ID - first ID of the cluster)
+        final boolean[] seen = new boolean[4];
+        final double[] tx = new double[4], ty = new double[4];
 
         public boolean visible() { return tagCount > 0; }
+        /** Enough tags (2+) to know where the cluster center is. */
+        public boolean aimable() { return tagCount >= 2; }
+
+        public String centerMethod() {
+            return tagCount >= 4 ? "average of 4" : tagCount >= 2 ? "spacing of " + tagCount + " tags"
+                    : tagCount == 1 ? "1 tag: NOT used for aim (odometry)" : "no tags (odometry)";
+        }
     }
 
     /** One MegaTag2 robot-pose measurement, already in the Pedro frame. */
@@ -64,6 +87,8 @@ public class Vision {
     private final Map<CellSide, ClusterView> theirs = new EnumMap<>(CellSide.class);
     private PoseFix poseFix = null;
     private String visibleIds = "";
+    private double stalenessMs = Double.POSITIVE_INFINITY;
+    private double captureTimeSec = 0.0;
 
     public Vision(HardwareMap hw, Alliance alliance) {
         this.alliance = alliance;
@@ -97,6 +122,7 @@ public class Vision {
         poseFix = null;
         resultValid = false;
         visibleIds = "";
+        stalenessMs = Double.POSITIVE_INFINITY;
         if (ll == null) { connected = false; return; }
         connected = ll.isConnected();
 
@@ -106,6 +132,9 @@ public class Vision {
         LLResult r = ll.getLatestResult();
         if (r == null || !r.isValid()) return;
         resultValid = true;
+        stalenessMs = r.getStaleness();
+        double totalLatencyMs = stalenessMs + r.getCaptureLatency() + r.getTargetingLatency();
+        captureTimeSec = nowSec - totalLatencyMs / 1000.0;
 
         List<LLResultTypes.FiducialResult> fids = r.getFiducialResults();
         StringBuilder ids = new StringBuilder();
@@ -117,7 +146,7 @@ public class Vision {
                 if (owner == null) continue;
                 CellSide side = owner.cellForTag(id);
                 ClusterView cv = (owner == alliance ? ours : theirs).get(side);
-                accumulate(cv, f);
+                accumulate(cv, f, id - owner.firstTagId(side));
             }
         }
         for (CellSide s : CellSide.values()) {
@@ -134,21 +163,29 @@ public class Vision {
                 fix.pose = Field.limelightToPedro(p.x, p.y, bp.getOrientation().getYaw(AngleUnit.DEGREES));
                 fix.tagCount = r.getBotposeTagCount();
                 fix.avgDistM = r.getBotposeAvgDist();
-                fix.stalenessMs = r.getStaleness();
-                fix.totalLatencyMs = fix.stalenessMs + r.getCaptureLatency() + r.getTargetingLatency();
-                fix.captureTimeSec = nowSec - fix.totalLatencyMs / 1000.0;
-                // TURRET_FIXED: the camera pose already includes the turret offset, so this is
-                // the robot center. (Rotating turret later: subtract the rotated offset here.)
+                fix.stalenessMs = stalenessMs;
+                fix.totalLatencyMs = totalLatencyMs;
+                fix.captureTimeSec = captureTimeSec;
+                if (!TURRET_FIXED) {
+                    // The Limelight's "robot" is the turret axis here: shift to the robot center.
+                    // (TURRET_FIXED: the camera pose in the web UI already includes the offset.)
+                    double h = Math.toRadians(robotHeadingDegPedro);
+                    double fw = TURRET_AXIS_OFFSET_FWD_IN, lf = TURRET_AXIS_OFFSET_LEFT_IN;
+                    fix.pose = new Pose(fix.pose.getX() - (fw * Math.cos(h) - lf * Math.sin(h)),
+                            fix.pose.getY() - (fw * Math.sin(h) + lf * Math.cos(h)), fix.pose.getHeading());
+                }
                 poseFix = fix;
             }
         }
     }
 
-    // running sums kept in the view fields, averaged in finish()
-    private static void accumulate(ClusterView cv, LLResultTypes.FiducialResult f) {
+    // per-tag angles + a running distance sum, turned into the cluster center in finish()
+    private static void accumulate(ClusterView cv, LLResultTypes.FiducialResult f, int slot) {
+        if (cv.seen[slot]) return; // same tag reported twice
+        cv.seen[slot] = true;
+        cv.tx[slot] = f.getTargetXDegrees();
+        cv.ty[slot] = f.getTargetYDegrees();
         cv.tagCount++;
-        cv.txDeg += f.getTargetXDegrees();
-        cv.tyDeg += f.getTargetYDegrees();
         Pose3D t = f.getTargetPoseCameraSpace();
         double d = Double.NaN;
         if (t != null) {
@@ -169,9 +206,8 @@ public class Vision {
 
     private static void finish(ClusterView cv) {
         if (cv.tagCount == 0) return;
-        int n = cv.tagCount;
-        cv.txDeg /= n;
-        cv.tyDeg /= n;
+        cv.txDeg = centerOf(cv.tx, cv.seen);
+        cv.tyDeg = centerOf(cv.ty, cv.seen);
         if (cv.usedPose3d) {
             cv.distanceIn /= cv.pose3dCount;
         } else {
@@ -180,9 +216,37 @@ public class Vision {
             double tan = Math.tan(Math.toRadians(CAMERA_PITCH_DEG + cv.tyDeg));
             cv.distanceIn = tan > 1e-3 ? dh / tan + CAMERA_FORWARD_OF_TURRET_M * Field.M_TO_IN : Double.NaN;
         }
-        // NOTE: with fewer than 4 tags visible the average is offset from the true cluster
-        // center (tags sit ±2.75 / ±6.5 in along the sticker). Aim tolerance absorbs this;
-        // correct it once the tag order on the sticker is confirmed.
+    }
+
+    /**
+     * Value at the cluster center (strip position 0) from the visible tags: a least-squares
+     * line through (strip position, value), read at 0. 4 tags: their average. 2 tags: the
+     * brief's tx_A + (0 - s_A)(tx_B - tx_A)/(s_B - s_A), which also works when both tags are
+     * on the same side of the center. 1 tag: that tag's value.
+     *
+     * @param v    value per tag, indexed by ID - first ID of the cluster
+     * @param seen which of the 4 tags are visible
+     */
+    static double centerOf(double[] v, boolean[] seen) {
+        int n = 0;
+        double sMean = 0, vMean = 0;
+        for (int i = 0; i < 4; i++) {
+            if (!seen[i]) continue;
+            n++;
+            sMean += STRIP_IN[i];
+            vMean += v[i];
+        }
+        if (n == 0) return Double.NaN;
+        sMean /= n;
+        vMean /= n;
+        if (n == 1) return vMean;
+        double sv = 0, ss = 0;
+        for (int i = 0; i < 4; i++) {
+            if (!seen[i]) continue;
+            sv += (STRIP_IN[i] - sMean) * (v[i] - vMean);
+            ss += (STRIP_IN[i] - sMean) * (STRIP_IN[i] - sMean);
+        }
+        return vMean - sv / ss * sMean;
     }
 
     /** Change which alliance's tags count as "ours" (INIT menu). */
@@ -201,4 +265,8 @@ public class Vision {
     /** Latest MegaTag2 fix, or null. Not yet gated: the Localizer decides if it's trustworthy. */
     public PoseFix getPoseFix() { return poseFix; }
     public String getVisibleIds() { return visibleIds; }
+    /** How old the latest result was when we read it (ms); infinite if there is none. */
+    public double getStalenessMs() { return stalenessMs; }
+    /** When the latest frame was captured, on the OpMode clock. */
+    public double getCaptureTimeSec() { return captureTimeSec; }
 }

@@ -141,7 +141,8 @@ public abstract class BiobuzzAutoBase extends OpMode {
         telemetryM.addLine(String.format("Seeded pose: x=%.1f y=%.1f h=%.1f°", p.getX(), p.getY(), Math.toDegrees(p.getHeading())));
         telemetryM.addLine("Limelight: " + (robot.vision.isConnected() ? "connected" : "NOT CONNECTED")
                 + "  tags: " + robot.vision.getVisibleIds());
-        telemetryM.addLine("Aimer: " + robot.aimer.name());
+        telemetryM.addLine("Aimer: " + robot.aimer.name()
+                + (TURRET_FIXED ? "" : "  -> turret must be ON ITS HOME MARK now (this is 0°)"));
         for (String w : validateStaticPoses()) telemetryM.addLine("⚠ " + w);
         for (String w : RobotConstants.placeholderWarnings()) telemetryM.addLine("⚠ " + w);
         telemetryM.addLine("LOCALIZER READY. Keep the robot still.");
@@ -178,6 +179,8 @@ public abstract class BiobuzzAutoBase extends OpMode {
 
         // Flywheel stays spinning the whole AUTO (no braking between volleys).
         if (!mechStopped) robot.shooter.setTargetRpm(sol.rpm);
+        // Rotating turret: track the up CELL the whole AUTO (the chassis just follows its paths).
+        if (!mechStopped && !TURRET_FIXED) robot.aimer.update(sol, dt);
         want = Feeder.Mode.HOLD; // steps override
 
         // Hard deadline: go park wherever we are.
@@ -335,13 +338,14 @@ public abstract class BiobuzzAutoBase extends OpMode {
 
         @Override
         boolean update(double now, double dt, ShotSolver.Solution sol) {
-            double heading = robot.localizer.getPose().getHeading();
-            double goal = sol.visionAim ? heading + Math.toRadians(sol.aimErrDeg) : sol.desiredHeadingRad;
-            double maxStep = Math.toRadians(AUTO_TX_CORRECT_DEG_S) * dt;
-            double d = Field.wrapRad(goal - holdHeading);
-            holdHeading = Field.wrapRad(holdHeading + Math.max(-maxStep, Math.min(maxStep, d)));
-            if (!sol.visionAim) holdHeading = goal; // odometry target is exact; no need to rate-limit
-            if (Math.abs(Math.toDegrees(Field.wrapRad(holdHeading - issuedHeading))) > AUTO_REHOLD_DEG) issue();
+            if (TURRET_FIXED) { // rotating turret: the chassis just holds, the turret does the aiming
+                double goal = sol.desiredHeadingRad; // odometry direction + Limelight correction
+                double maxStep = Math.toRadians(AUTO_TX_CORRECT_DEG_S) * dt;
+                double d = Field.wrapRad(goal - holdHeading);
+                holdHeading = Field.wrapRad(holdHeading + Math.max(-maxStep, Math.min(maxStep, d)));
+                if (!sol.visionAim) holdHeading = goal; // odometry target is exact; no need to rate-limit
+                if (Math.abs(Math.toDegrees(Field.wrapRad(holdHeading - issuedHeading))) > AUTO_REHOLD_DEG) issue();
+            }
 
             want = sol.canShoot ? Feeder.Mode.FEED : Feeder.Mode.HOLD;
 
@@ -524,6 +528,7 @@ public abstract class BiobuzzAutoBase extends OpMode {
                 robot.feeder.getBallEstimate(), robot.shooter.getShotsDetected(), robot.tips.getTipCount(),
                 robot.tips.ballsToTipEstimate(), robot.tips.tipLikely() ? " (TIP LIKELY)" : ""));
         telemetryM.addLine("Feeder: " + robot.feeder.getMode() + "  tags: " + robot.vision.getVisibleIds());
+        if (!TURRET_FIXED) telemetryM.addLine(robot.turret.describe());
         for (String w : planWarnings) telemetryM.addLine("⚠ " + w);
         telemetryM.update(telemetry);
         FieldDraw.draw(robot.localizer.getPose(), robot.localizer.getLastAcceptedVisionPose(), sol.target);

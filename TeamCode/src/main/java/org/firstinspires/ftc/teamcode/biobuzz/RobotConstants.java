@@ -21,10 +21,12 @@ public class RobotConstants {
     // TURRET MODE
     // =====================================================================================
     /**
-     * TEMPORARY: the turret is locked facing forward. The shooter + Limelight aim by turning
-     * the whole robot (ChassisAimer). The turret motor is wired into the code (Turret.java)
-     * but is NEVER powered while this is true. Rotating-turret aiming (TurretAimer) is not
-     * written yet.
+     * true  = turret locked facing forward: aim by turning the whole robot (ChassisAimer); the
+     *         turret motor is NEVER powered.
+     * false = rotating turret (TurretAimer): tracks our up CELL's tag cluster, ±225° with a
+     *         360° flip (docs/biobuzz/UNDERHAND_BRIEF.md).
+     * Keep true until TURRET_TICKS_PER_DEG is measured (Turret Calibration), then set false.
+     * Also change the Limelight's camera pose in its web UI when you switch (see Vision.java).
      */
     public static boolean TURRET_FIXED = true;
 
@@ -39,28 +41,48 @@ public class RobotConstants {
     public static String TURRET_NAME = "turret";
 
     // =====================================================================================
-    // TURRET ROTATION (wired but locked while TURRET_FIXED). Cable-wrap safety: no slip ring.
+    // TURRET ROTATION (never powered while TURRET_FIXED). Cable-wrap safety: no slip ring.
+    // Angles: unwrapped degrees from the home mark, + = counter-clockwise seen from above,
+    // 0 = camera/shot direction facing robot-forward.
     // =====================================================================================
     /** Flip if turning the turret counter-clockwise (seen from above) makes the angle go DOWN. */
     public static boolean TURRET_REVERSED = false;
     /**
      * Encoder ticks per turret degree. PLACEHOLDER 0 = NOT CALIBRATED: the turret is never
-     * powered (limits can't be enforced without it). Measure with TurretCalibration.
+     * powered (limits can't be enforced without it). Measure with Turret Calibration; it
+     * should come out near 537.7 (312 RPM motor) x turret gear ratio / 360.
      */
     public static double TURRET_TICKS_PER_DEG = 0.0;
-    /** Soft limits from home, unwrapped degrees. PLACEHOLDER ±150 until measured; total < 360. */
-    public static double TURRET_MIN_DEG = -150.0;
-    public static double TURRET_MAX_DEG = 150.0;
+    /** Travel limits from home (team spec ±225°). Hand-check the cables at both ends. */
+    public static double TURRET_MIN_DEG = -225.0;
+    public static double TURRET_MAX_DEG = 225.0;
+    /** A target this far past a limit triggers the 360° flip (stops chatter at the boundary). */
+    public static double TURRET_FLIP_HYSTERESIS_DEG = 3.0;
     /** Power tapers linearly to 0 over this distance before a limit. */
     public static double TURRET_SLOW_ZONE_DEG = 20.0;
-    /** Setpoints are clamped this far inside the limits. */
-    public static double TURRET_LIMIT_MARGIN_DEG = 5.0;
+    /** The limits also apply to where the turret will be this much later at its current speed. */
+    public static double TURRET_LIMIT_LOOKAHEAD_S = 0.1;
     /** Angle outside [MIN - this, MAX + this] = encoder fault (stop until re-zeroed). */
     public static double TURRET_FAULT_BEYOND_DEG = 20.0;
+    /** Max turret power in every mode (the manual stick is scaled to this). */
     public static double TURRET_MAX_POWER = 0.5;
-    public static double TURRET_KP = 0.02;   // power per degree, PLACEHOLDER (tune when enabled)
-    public static double TURRET_KD = 0.0005;
+    // PIDF on the turret encoder angle. PLACEHOLDER gains: tune with "Turret PIDF Tuner".
+    public static double TURRET_KP = 0.02;   // power per degree of error
+    public static double TURRET_KI = 0.0;    // power per degree-second
+    public static double TURRET_KD = 0.0005; // power per degree/second of turret speed (damping)
+    /** Static friction: added as sign(error) * KF outside the deadband. */
+    public static double TURRET_KF = 0.0;
+    /**
+     * Counter-rotation while the chassis turns: feeds forward -(robot turn rate). 1.0 = the
+     * power that spins the unloaded motor at exactly that speed (free speed below); 0 = off.
+     */
+    public static double TURRET_KV = 1.0;
+    /** goBILDA 312 RPM motor free speed in encoder ticks/s (537.7 ticks per output rev). */
+    public static final double TURRET_MOTOR_FREE_TICKS_S = 312.0 / 60.0 * 537.7;
+    public static double TURRET_INTEGRAL_CLAMP = 30.0; // degree-seconds
     public static double TURRET_DEADBAND_DEG = 0.5;
+    /** "Aimed" also needs the turret slower than this. */
+    public static double TURRET_AIMED_MAX_RATE_DEG_S = 30.0;
     /** Stall: |power| above this but the turret moved less than STALL_MIN_DEG for STALL_TIME_S. */
     public static double TURRET_STALL_POWER = 0.3;
     public static double TURRET_STALL_MIN_DEG = 1.0;
@@ -159,13 +181,15 @@ public class RobotConstants {
 
 
     // =====================================================================================
-    // CAMERA (Limelight 3A, on the turret, fixed facing forward for now)
+    // CAMERA (Limelight 3A on the LL Mount at the back of the turret, on the centerline; the
+    // shot leaves in the camera's direction). Numbers from the "underhand maybe" CAD.
     // =====================================================================================
     /** Lens height above the tiles. PLACEHOLDER estimate; measure on the built robot. */
-    public static double CAMERA_HEIGHT_M = 0.354;
-    public static double CAMERA_PITCH_DEG = 37.0;
-    /** Lens forward of the turret yaw axis (CAD). */
-    public static double CAMERA_FORWARD_OF_TURRET_M = 0.1165;
+    public static double CAMERA_HEIGHT_M = 0.325;
+    /** Camera pitch above horizontal (the LL Mount plate is 20° off vertical). */
+    public static double CAMERA_PITCH_DEG = 20.0;
+    /** Lens forward of the turret yaw axis. PLACEHOLDER (hole-pattern center): tape-measure the lens. */
+    public static double CAMERA_FORWARD_OF_TURRET_M = 0.094;
 
     /**
      * Turret yaw axis relative to the robot rotation center, inches (forward, left).
@@ -209,7 +233,7 @@ public class RobotConstants {
     public static double HIVE_CLEARANCE_IN = 2.0;
 
     // =====================================================================================
-    // AIMING (chassis aim while TURRET_FIXED)
+    // AIMING (AIM_KP..AIM_DEADBAND_DEG: chassis aim, only used while TURRET_FIXED)
     // =====================================================================================
     public static double AIM_KP = 0.025;          // turn power per degree (retune: new robot)
     public static double AIM_KD = 0.0015;
@@ -217,10 +241,12 @@ public class RobotConstants {
     public static double AIM_FINE_MAX_POWER = 0.30;
     public static double AIM_FINE_ZONE_DEG = 4.0;
     public static double AIM_DEADBAND_DEG = 0.5;
-    /** Constant yaw offset from cluster center to opening center when aiming on tx. */
+    /** Aimed = cluster center this many degrees RIGHT of the crosshair (cluster vs opening center). */
     public static double AIM_TX_OFFSET_DEG = 0.0;
-    /** EMA filter on tx (DECODE 0.35). */
+    /** EMA filter on the Limelight aim correction (DECODE 0.35). */
     public static double TX_EMA_ALPHA = 0.35;
+    /** The aim error must stay inside the tolerance this many loops in a row. */
+    public static int AIMED_LOOPS = 3;
     /** Max robot turn rate allowed while launching. */
     public static double SHOOT_MAX_TURN_RATE_DEG_S = 30.0;
     /** Max robot speed while launching (stationary shots first; raise with shoot-while-moving). */
@@ -252,6 +278,8 @@ public class RobotConstants {
     public static double VISION_MAX_STALENESS_MS = 100.0;
     public static double VISION_MAX_SPEED_IN_S = 15.0;
     public static double VISION_MAX_TURN_RATE_DEG_S = 45.0;
+    /** The camera rides on the turret: no pose fixes while the turret turns faster than this. */
+    public static double VISION_MAX_TURRET_RATE_DEG_S = 60.0;
     /** Reject vision within this long of any HIVE motion (ours or the opponent's). */
     public static double VISION_TIP_BLACKOUT_S = 2.0;
     public static double ODOM_HISTORY_S = 0.5;
@@ -323,7 +351,7 @@ public class RobotConstants {
         java.util.List<String> w = new java.util.ArrayList<>();
         if (TURRET_AXIS_OFFSET_FWD_IN == 0.0 && TURRET_AXIS_OFFSET_LEFT_IN == 0.0)
             w.add("TURRET_AXIS_OFFSET is (0,0): tape-measure it");
-        if (CAMERA_HEIGHT_M == 0.354) w.add("CAMERA_HEIGHT_M is the 0.354 m estimate");
+        if (CAMERA_HEIGHT_M == 0.325) w.add("CAMERA_HEIGHT_M is the 0.325 m estimate");
         if (TAG_CLUSTER_HEIGHT_IN == 45.0) w.add("TAG_CLUSTER_HEIGHT_IN is the 45 in estimate");
         if (RED_AUDIENCE_CELL_Y == 56.6 && RED_FAR_CELL_Y == 87.4)
             w.add("CELL positions unverified (conflict with 18.8 in spacing)");
@@ -334,10 +362,8 @@ public class RobotConstants {
         if (org.firstinspires.ftc.teamcode.pedroPathing.Constants.localizerConstants.forwardPodY == 0.0
                 && org.firstinspires.ftc.teamcode.pedroPathing.Constants.localizerConstants.strafePodX == 0.0)
             w.add("Pinpoint pod offsets are (0,0): measure them (pedroPathing/Constants.java)");
-        if (!TURRET_FIXED && TURRET_TICKS_PER_DEG == 0.0)
-            w.add("TURRET_TICKS_PER_DEG not set: turret stays unpowered");
-        if (!TURRET_FIXED && TURRET_MIN_DEG == -150.0 && TURRET_MAX_DEG == 150.0)
-            w.add("Turret limits are the ±150° placeholder: measure them");
+        if (TURRET_FIXED) w.add("TURRET_FIXED: turret unpowered, aiming with the chassis (run Turret Calibration)");
+        else if (TURRET_TICKS_PER_DEG == 0.0) w.add("TURRET_TICKS_PER_DEG not set: turret stays unpowered");
         return w;
     }
 }

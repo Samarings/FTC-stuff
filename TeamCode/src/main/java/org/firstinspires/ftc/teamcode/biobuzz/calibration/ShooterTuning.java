@@ -94,7 +94,8 @@ public class ShooterTuning extends OpMode {
 
         if (buttons.pressed("g1a", gamepad1.a)) { aimOn = !aimOn; robot.aimer.reset(); }
         double sign = alliance == Alliance.RED ? 1 : -1;
-        double turn = aimOn ? robot.aimer.update(sol, dt) : -gamepad1.right_stick_x * TELEOP_TURN_SCALE;
+        double aimTurn = aimOn ? robot.aimer.update(sol, dt) : 0.0; // rotating turret: aims the turret, returns 0
+        double turn = aimOn && TURRET_FIXED ? aimTurn : -gamepad1.right_stick_x * TELEOP_TURN_SCALE;
         follower.setTeleOpDrive(-gamepad1.left_stick_y * sign * 0.5, -gamepad1.left_stick_x * sign * 0.5, turn, false);
 
         if (buttons.pressed("g2b", gamepad2.b)) shooterOn = !shooterOn;
