@@ -1,0 +1,14 @@
+# Keep the graph on our code + design docs (gitignore syntax)
+FtcRobotController-12.0/      # unused SDK copy
+FtcRobotController/           # SDK + samples, not ours
+TeamCode/src/main/java/org/firstinspires/ftc/teamcode/OLD*.java   # dead DECODE files
+doc/
+libs/
+.github/
+README.md                     # SDK readme
+**/res/raw/
+*.png
+*.PNG
+*.pdf
+*.wav
+graphify-out/

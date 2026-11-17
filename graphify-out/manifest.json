@@ -1,0 +1,386 @@
+{
+  "TeamCode/build.gradle": {
+    "mtime": 1793458558.2586837,
+    "seen": 1794406928.6827316,
+    "ast_hash": "d6d1fad4e95309686402b5367a8dbd58",
+    "semantic_hash": "d6d1fad4e95309686402b5367a8dbd58"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/AutoTest.java": {
+    "mtime": 1793458588.3842938,
+    "seen": 1794406928.6827328,
+    "ast_hash": "06ea3351f8413f3497801a84d94582fd",
+    "semantic_hash": "06ea3351f8413f3497801a84d94582fd"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/BlueFar.java": {
+    "mtime": 1793458588.2688103,
+    "seen": 1794406928.682734,
+    "ast_hash": "b8ebed481f73b86b9b73fa5c78ee7d57",
+    "semantic_hash": "b8ebed481f73b86b9b73fa5c78ee7d57"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/BlueMain.java": {
+    "mtime": 1793458588.4246016,
+    "seen": 1794406928.6827357,
+    "ast_hash": "86bf3b476f982762608a6311ef74f659",
+    "semantic_hash": "86bf3b476f982762608a6311ef74f659"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/BlueMulti.java": {
+    "mtime": 1793458588.4351325,
+    "seen": 1794406928.6827369,
+    "ast_hash": "d89bf257659873435f5fdeb1b3cabcdb",
+    "semantic_hash": "d89bf257659873435f5fdeb1b3cabcdb"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/IntakeAutoTest.java": {
+    "mtime": 1793458588.3747804,
+    "seen": 1794406928.682738,
+    "ast_hash": "ee59a23dcce91d8c11bd7836fe4fd7f3",
+    "semantic_hash": "ee59a23dcce91d8c11bd7836fe4fd7f3"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/MainTeleop.java": {
+    "mtime": 1793458588.2911458,
+    "seen": 1794406928.6827395,
+    "ast_hash": "7219961c895bc1087fc6fc75a2fd2725",
+    "semantic_hash": "7219961c895bc1087fc6fc75a2fd2725"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/MotorMappingTest.java": {
+    "mtime": 1793458588.4887629,
+    "seen": 1794406928.6827404,
+    "ast_hash": "34fd5525187613d5f7434f3b880bd77a",
+    "semantic_hash": "34fd5525187613d5f7434f3b880bd77a"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/NewTestTeleop.java": {
+    "mtime": 1793458588.4642303,
+    "seen": 1794406928.682742,
+    "ast_hash": "ddd2db4d98490689cc4c36237da54b14",
+    "semantic_hash": "ddd2db4d98490689cc4c36237da54b14"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/OneMotorTesting.java": {
+    "mtime": 1793458588.4029431,
+    "seen": 1794406928.6827502,
+    "ast_hash": "ac4cb1bc763a4d2bf44243dfd62cc6f8",
+    "semantic_hash": "ac4cb1bc763a4d2bf44243dfd62cc6f8"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/PoseTest.java": {
+    "mtime": 1793458588.356592,
+    "seen": 1794406928.6827514,
+    "ast_hash": "96fc569b94fb1dd157656ab26c5e8375",
+    "semantic_hash": "96fc569b94fb1dd157656ab26c5e8375"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/RedFar.java": {
+    "mtime": 1793458588.316628,
+    "seen": 1794406928.6827528,
+    "ast_hash": "08ad7c70c5f87e2557ed99c8a80d0d82",
+    "semantic_hash": "08ad7c70c5f87e2557ed99c8a80d0d82"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/RedMain.java": {
+    "mtime": 1793458588.3363855,
+    "seen": 1794406928.6827552,
+    "ast_hash": "c966272c4b215dd70efa303c90402af3",
+    "semantic_hash": "c966272c4b215dd70efa303c90402af3"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/RedMulti.java": {
+    "mtime": 1793458588.3276656,
+    "seen": 1794406928.682757,
+    "ast_hash": "fff75e915360c68bd774383641c8d991",
+    "semantic_hash": "fff75e915360c68bd774383641c8d991"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Teleop2PlayerLimelight.java": {
+    "mtime": 1793458588.413,
+    "seen": 1794406928.682758,
+    "ast_hash": "b73dd63438108de369633dc3b6ab93b0",
+    "semantic_hash": "b73dd63438108de369633dc3b6ab93b0"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Testing.java": {
+    "mtime": 1793458588.3051186,
+    "seen": 1794406928.6827595,
+    "ast_hash": "84c7367caecf06bb86f7033f0baea8e0",
+    "semantic_hash": "84c7367caecf06bb86f7033f0baea8e0"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Aimer.java": {
+    "mtime": 1794448898.865181,
+    "seen": 1794454617.6028128,
+    "ast_hash": "36bb495fb0efb8987b49ece222520cc6",
+    "semantic_hash": "36bb495fb0efb8987b49ece222520cc6"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Alliance.java": {
+    "mtime": 1793461406.543246,
+    "seen": 1794406928.6827624,
+    "ast_hash": "72d93554720a5081db78fd9026fa1601",
+    "semantic_hash": "72d93554720a5081db78fd9026fa1601"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/BallType.java": {
+    "mtime": 1793461407.266994,
+    "seen": 1794406928.6827636,
+    "ast_hash": "38e25841801e9753b0ddacde904e5c50",
+    "semantic_hash": "38e25841801e9753b0ddacde904e5c50"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Buttons.java": {
+    "mtime": 1793461793.371871,
+    "seen": 1794406928.6827648,
+    "ast_hash": "5bcabe2e0c0f1248ee5496a4880b70ca",
+    "semantic_hash": "5bcabe2e0c0f1248ee5496a4880b70ca"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/CellSide.java": {
+    "mtime": 1793461406.9442873,
+    "seen": 1794406928.6827662,
+    "ast_hash": "c66ce78403899e526ef85cee7c0b2adc",
+    "semantic_hash": "c66ce78403899e526ef85cee7c0b2adc"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/ChassisAimer.java": {
+    "mtime": 1793461645.7553058,
+    "seen": 1794406928.6827676,
+    "ast_hash": "80b9c065f67236e59e84765789cf77fa",
+    "semantic_hash": "80b9c065f67236e59e84765789cf77fa"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Feeder.java": {
+    "mtime": 1793470988.8443234,
+    "seen": 1794406928.6827688,
+    "ast_hash": "d853d7aea418f697950e82afe135574c",
+    "semantic_hash": "d853d7aea418f697950e82afe135574c"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Field.java": {
+    "mtime": 1793461429.5106049,
+    "seen": 1794406928.68277,
+    "ast_hash": "d27f6ec99d55f1c3df1d651d1e937dff",
+    "semantic_hash": "d27f6ec99d55f1c3df1d651d1e937dff"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/FieldDraw.java": {
+    "mtime": 1793461669.440762,
+    "seen": 1794406928.6827712,
+    "ast_hash": "a1e35e0c5c0a6d6a9d13c64da6cd3903",
+    "semantic_hash": "a1e35e0c5c0a6d6a9d13c64da6cd3903"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/HeadingHold.java": {
+    "mtime": 1793473063.3522227,
+    "seen": 1794406928.6827724,
+    "ast_hash": "257905fd8da513ec473b8c6502c49b09",
+    "semantic_hash": "257905fd8da513ec473b8c6502c49b09"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Localizer.java": {
+    "mtime": 1794448898.299525,
+    "seen": 1794454617.6028347,
+    "ast_hash": "c76717f13b4fc78aadb3b345be854eb0",
+    "semantic_hash": "c76717f13b4fc78aadb3b345be854eb0"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/PidfStore.java": {
+    "mtime": 1793473151.4550178,
+    "seen": 1794406928.6827753,
+    "ast_hash": "a3658e762a643e72fef2b5f47af8aee2",
+    "semantic_hash": "a3658e762a643e72fef2b5f47af8aee2"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/PoseStorage.java": {
+    "mtime": 1794448915.2913747,
+    "seen": 1794454617.6028388,
+    "ast_hash": "7d7cd2adc88949912d468e78d36d96aa",
+    "semantic_hash": "7d7cd2adc88949912d468e78d36d96aa"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Robot.java": {
+    "mtime": 1794449689.102076,
+    "seen": 1794454617.6028407,
+    "ast_hash": "6157cbcbc705c01a5b2158b6fe244a3b",
+    "semantic_hash": "6157cbcbc705c01a5b2158b6fe244a3b"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/RobotConstants.java": {
+    "mtime": 1794449408.8710442,
+    "seen": 1794454617.6028426,
+    "ast_hash": "45ce061132258ce8c2e5313eee9a7db3",
+    "semantic_hash": "45ce061132258ce8c2e5313eee9a7db3"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Shooter.java": {
+    "mtime": 1793469113.5667024,
+    "seen": 1794406928.6827805,
+    "ast_hash": "0fa5072f004c520642771c4a895ff5a9",
+    "semantic_hash": "0fa5072f004c520642771c4a895ff5a9"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/ShotSolver.java": {
+    "mtime": 1794449065.213959,
+    "seen": 1794454617.6028464,
+    "ast_hash": "89ed814b6bd7247bf2d00262fcb79da5",
+    "semantic_hash": "89ed814b6bd7247bf2d00262fcb79da5"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/TipTracker.java": {
+    "mtime": 1793461549.8308291,
+    "seen": 1794406928.682783,
+    "ast_hash": "40c523b90cf0235377787f200568a8f1",
+    "semantic_hash": "40c523b90cf0235377787f200568a8f1"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Turret.java": {
+    "mtime": 1794450208.6140149,
+    "seen": 1794454617.602851,
+    "ast_hash": "a8c8278a7cd24a4fcf09e0a3c76181e8",
+    "semantic_hash": "a8c8278a7cd24a4fcf09e0a3c76181e8"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/Vision.java": {
+    "mtime": 1794448823.9719098,
+    "seen": 1794454617.6028554,
+    "ast_hash": "e5315f45d9d89f62db4dcc01893210aa",
+    "semantic_hash": "e5315f45d9d89f62db4dcc01893210aa"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/auto/AutoHoldStill.java": {
+    "mtime": 1793462258.5125668,
+    "seen": 1794406928.6827867,
+    "ast_hash": "ffeae462308e943f1ee8a0a95d3ea576",
+    "semantic_hash": "ffeae462308e943f1ee8a0a95d3ea576"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/auto/AutoPoses.java": {
+    "mtime": 1793461736.9686275,
+    "seen": 1794406928.682788,
+    "ast_hash": "5754e4f05285982f8e45eee6fd7e4102",
+    "semantic_hash": "5754e4f05285982f8e45eee6fd7e4102"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/auto/AutoPreloadFlower.java": {
+    "mtime": 1793461911.8706222,
+    "seen": 1794406928.682789,
+    "ast_hash": "5de16c93e3a32b0d187f355f271b66b6",
+    "semantic_hash": "5de16c93e3a32b0d187f355f271b66b6"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/auto/AutoPreloadGarden.java": {
+    "mtime": 1793461904.3618946,
+    "seen": 1794406928.6827905,
+    "ast_hash": "a96d267ea5533d1d641e691cbf037ee7",
+    "semantic_hash": "a96d267ea5533d1d641e691cbf037ee7"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/auto/AutoPreloadPark.java": {
+    "mtime": 1793461904.0322328,
+    "seen": 1794406928.6827917,
+    "ast_hash": "75b2afcb21f452254b200ff0e8a94964",
+    "semantic_hash": "75b2afcb21f452254b200ff0e8a94964"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/auto/BiobuzzAutoBase.java": {
+    "mtime": 1794449090.161976,
+    "seen": 1794454617.6028688,
+    "ast_hash": "f33c8f4440c81d37b320ef5ea057fbb5",
+    "semantic_hash": "f33c8f4440c81d37b320ef5ea057fbb5"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/calibration/LocalizationTest.java": {
+    "mtime": 1793462073.8214092,
+    "seen": 1794406928.6827946,
+    "ast_hash": "d68b0029cef03fd391546744e1c79268",
+    "semantic_hash": "d68b0029cef03fd391546744e1c79268"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/calibration/MotorTest.java": {
+    "mtime": 1793470137.4041715,
+    "seen": 1794406928.6827958,
+    "ast_hash": "6f266fa7af182118d5bfacafd977fa8c",
+    "semantic_hash": "6f266fa7af182118d5bfacafd977fa8c"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/calibration/PidfTuner.java": {
+    "mtime": 1793474104.0448642,
+    "seen": 1794406928.682797,
+    "ast_hash": "6cc2c89b0df9372f5c782bab9ff47183",
+    "semantic_hash": "6cc2c89b0df9372f5c782bab9ff47183"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/calibration/ShooterTuning.java": {
+    "mtime": 1794449090.2704296,
+    "seen": 1794454617.602877,
+    "ast_hash": "81cb4f25658a2611cf41f821d0112e7b",
+    "semantic_hash": "81cb4f25658a2611cf41f821d0112e7b"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/calibration/TurretCalibration.java": {
+    "mtime": 1794449113.2823958,
+    "seen": 1794454617.6028795,
+    "ast_hash": "e064ff33c45d4517a3a08a4858c10199",
+    "semantic_hash": "e064ff33c45d4517a3a08a4858c10199"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/calibration/VisionCheck.java": {
+    "mtime": 1794449586.930396,
+    "seen": 1794454617.6028833,
+    "ast_hash": "6cfa7d60a1e99c5e3ce8472f28a9d445",
+    "semantic_hash": "6cfa7d60a1e99c5e3ce8472f28a9d445"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/teleop/BiobuzzTeleOp.java": {
+    "mtime": 1794449587.1439087,
+    "seen": 1794454617.602885,
+    "ast_hash": "a5c30a6f8c3693632225cbb000090761",
+    "semantic_hash": "a5c30a6f8c3693632225cbb000090761"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/Constants.java": {
+    "mtime": 1793468571.1030562,
+    "seen": 1794406928.6828039,
+    "ast_hash": "1090b55975c45c5eebc1ee53b590fe84",
+    "semantic_hash": "1090b55975c45c5eebc1ee53b590fe84"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/Tuning.java": {
+    "mtime": 1793458588.5265794,
+    "seen": 1794406928.6828053,
+    "ast_hash": "2ba1d4bed66ec5970023bc72faa51df7",
+    "semantic_hash": "2ba1d4bed66ec5970023bc72faa51df7"
+  },
+  "build.common.gradle": {
+    "mtime": 1793458558.2182405,
+    "seen": 1794406928.6828063,
+    "ast_hash": "ea5cdbf7d51768e494a82ddee0274a04",
+    "semantic_hash": "ea5cdbf7d51768e494a82ddee0274a04"
+  },
+  "build.dependencies.gradle": {
+    "mtime": 1793458558.204542,
+    "seen": 1794406928.6828074,
+    "ast_hash": "46187208a8c1a134230640b53218a3b4",
+    "semantic_hash": "46187208a8c1a134230640b53218a3b4"
+  },
+  "build.gradle": {
+    "mtime": 1793458558.1468093,
+    "seen": 1794406928.6828089,
+    "ast_hash": "91d46d0dc6f0246b2709be4d0c6fc48a",
+    "semantic_hash": "91d46d0dc6f0246b2709be4d0c6fc48a"
+  },
+  "gradlew": {
+    "mtime": 1793458588.6252496,
+    "seen": 1794406928.68281,
+    "ast_hash": "b84dad39ab1ea2c5421d4421fcf6fd06",
+    "semantic_hash": "b84dad39ab1ea2c5421d4421fcf6fd06"
+  },
+  "settings.gradle": {
+    "mtime": 1793458558.2292495,
+    "seen": 1794406928.6828115,
+    "ast_hash": "79819c76a8efbd79783a63c39e077804",
+    "semantic_hash": "79819c76a8efbd79783a63c39e077804"
+  },
+  "CLAUDE.md": {
+    "mtime": 1794449650.8693821,
+    "seen": 1794454617.6029055,
+    "ast_hash": "8d632e27f66e528a31f140bb967a0058",
+    "semantic_hash": "8d632e27f66e528a31f140bb967a0058"
+  },
+  "docs/biobuzz/BIOBUZZ_RULES.md": {
+    "mtime": 1793458980.2959716,
+    "seen": 1794406928.6828177,
+    "ast_hash": "62b9836b35aee5134fa79420af74f4ab",
+    "semantic_hash": "62b9836b35aee5134fa79420af74f4ab"
+  },
+  "docs/biobuzz/TURRET_LIMELIGHT_BRIEF.md": {
+    "mtime": 1794447879.396826,
+    "seen": 1794454617.6029103,
+    "ast_hash": "0eb109df9deebab447925e20f69ff15e",
+    "semantic_hash": "0eb109df9deebab447925e20f69ff15e"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/TurretAimer.java": {
+    "mtime": 1794448898.473941,
+    "seen": 1794454617.602853,
+    "ast_hash": "935c1819d49bd4f5c082b2e6f84983bc",
+    "semantic_hash": "935c1819d49bd4f5c082b2e6f84983bc"
+  },
+  "TeamCode/src/main/java/org/firstinspires/ftc/teamcode/biobuzz/calibration/TurretPidfTuner.java": {
+    "mtime": 1794449254.0522046,
+    "seen": 1794454617.6028812,
+    "ast_hash": "b22806f5bfe57467315232ecaa1a198c",
+    "semantic_hash": "b22806f5bfe57467315232ecaa1a198c"
+  },
+  "TeamCode/src/test/java/org/firstinspires/ftc/teamcode/biobuzz/TurretSimCheck.java": {
+    "mtime": 1794449615.3851683,
+    "seen": 1794454617.6028917,
+    "ast_hash": "f9d801f295e98fb7a290b2692817d0ea",
+    "semantic_hash": "f9d801f295e98fb7a290b2692817d0ea"
+  },
+  "TeamCode/src/test/run-turret-sim.sh": {
+    "mtime": 1794449355.7808757,
+    "seen": 1794454617.6028936,
+    "ast_hash": "a66fc0f731e0ba271991dc20c3863805",
+    "semantic_hash": "a66fc0f731e0ba271991dc20c3863805"
+  },
+  "docs/biobuzz/UNDERHAND_BRIEF.md": {
+    "mtime": 1794447909.8560266,
+    "seen": 1794454617.6029117,
+    "ast_hash": "1340c1688c4a3dc82beabaa4c7674bb2",
+    "semantic_hash": "1340c1688c4a3dc82beabaa4c7674bb2"
+  }
+}
