@@ -183,8 +183,8 @@ public abstract class BiobuzzAutoBase extends OpMode {
         if (!mechStopped && !TURRET_FIXED) robot.aimer.update(sol, dt);
         want = Feeder.Mode.HOLD; // steps override
 
-        // Hard deadline: go park wherever we are.
-        if (!deadlineJumped && t >= AUTO_PARK_DEADLINE_S && current != null && !current.isPark) {
+        // Hard deadline: go park wherever we are (steps after the park, e.g. a last volley, keep running).
+        if (!deadlineJumped && t >= AUTO_PARK_DEADLINE_S && stepIndex < parkIndex) {
             deadlineJumped = true;
             jumpTo(parkIndex, now);
         }

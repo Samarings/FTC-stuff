@@ -38,5 +38,6 @@ public final class PoseStorage {
         upCell = null;
         tipCount = 0;
         savedAtNanos = 0;
+        turretHomeTicks = null;
     }
 }

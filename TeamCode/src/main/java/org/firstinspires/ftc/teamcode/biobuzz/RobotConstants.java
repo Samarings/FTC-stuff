@@ -175,9 +175,10 @@ public class RobotConstants {
 
     /**
      * Which way the intake faces, relative to robot forward (the shooter/camera side).
-     * 0 = intake at the front, 180 = intake at the back. PLACEHOLDER: confirm on the robot.
+     * 0 = intake at the front, 180 = intake at the back. 180 comes from the GARDEN start
+     * (heading 90° with the intake facing the GARDEN); confirm on the robot.
      */
-    public static double INTAKE_HEADING_OFFSET_DEG = 0.0;
+    public static double INTAKE_HEADING_OFFSET_DEG = 180.0;
 
 
     // =====================================================================================

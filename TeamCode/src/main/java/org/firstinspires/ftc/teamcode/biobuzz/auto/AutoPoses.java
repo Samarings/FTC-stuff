@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.biobuzz.CellSide;
 @Configurable
 public class AutoPoses {
 
-    public enum Start { AUDIENCE, ALLIANCE_WALL, FAR }
+    public enum Start { AUDIENCE, ALLIANCE_WALL, FAR, GARDEN }
 
     // ---- start positions (robot center). Wall contact uses the robot half-size.
     public static double START_AUDIENCE_X = 40.0;      // against the audience wall, x 30-60
@@ -31,6 +31,11 @@ public class AutoPoses {
     public static double START_AUDIENCE_H = 90.0;
     public static double START_ALLIANCE_WALL_H = 0.0;
     public static double START_FAR_H = -90.0;
+
+    // GARDEN start: side against the red wall, intake (rear) end this far from the audience
+    // wall (1 tile), facing the far wall so the intake looks at the GARDEN.
+    public static double START_GARDEN_INTAKE_Y = 24.0;
+    public static double START_GARDEN_H = 90.0;
 
     // ---- shooting spots, one per up CELL (heading is computed to face the target)
     public static double SHOOT_AUDIENCE_CELL_X = 38.0, SHOOT_AUDIENCE_CELL_Y = 20.0;
@@ -57,6 +62,11 @@ public class AutoPoses {
     public static double GARDEN_SWEEP_START_X = 34.0;
     public static double GARDEN_SWEEP_END_X = 10.0;
     public static double GARDEN_SWEEP_WALL_GAP_IN = 0.5;
+    /** Backing straight into the GARDEN: robot center x (GARDEN middle; red wall is x = 0). */
+    public static double GARDEN_BACKIN_X = 11.5;
+
+    // ---- shooting spot on the far side, next to (not in) the LOADING ZONE
+    public static double NEAR_LOADING_SHOOT_X = 24.0, NEAR_LOADING_SHOOT_Y = 106.0;
 
     // =================================================================================
 
@@ -70,6 +80,9 @@ public class AutoPoses {
                 return new Pose(START_AUDIENCE_X, hl(), Math.toRadians(START_AUDIENCE_H));
             case FAR:
                 return new Pose(START_FAR_X, 144.0 - hl(), Math.toRadians(START_FAR_H));
+            case GARDEN:
+                // heading ±90: the robot's side touches the red wall -> center x = half-width
+                return new Pose(hw(), START_GARDEN_INTAKE_Y + hl(), Math.toRadians(START_GARDEN_H));
             default:
                 return new Pose(hl(), START_ALLIANCE_WALL_Y, Math.toRadians(START_ALLIANCE_WALL_H));
         }
@@ -84,6 +97,29 @@ public class AutoPoses {
 
     public static Pose park(boolean upper) {
         return new Pose(hl() + PARK_WALL_GAP_IN, upper ? PARK_UPPER_Y : PARK_LOWER_Y, Math.toRadians(PARK_H));
+    }
+
+    /** Center x at which the robot can turn to any heading without touching the red wall. */
+    private static double offWallX() { return Math.hypot(hl(), hw()) + PARK_WALL_GAP_IN; }
+
+    /** LOADING ZONE park that leaves room to turn and shoot (still partly inside x 0-11). */
+    public static Pose parkShoot(boolean upper) {
+        return new Pose(offWallX(), upper ? PARK_UPPER_Y : PARK_LOWER_Y, 0);
+    }
+
+    /** Beside the GARDEN start, just far enough off the wall to turn toward the CELL. */
+    public static Pose gardenStartShoot() {
+        return new Pose(offWallX(), START_GARDEN_INTAKE_Y + hl(), 0);
+    }
+
+    /** Far-side shooting spot next to the LOADING ZONE; heading 0 (the engine sets it). */
+    public static Pose nearLoadingShoot() {
+        return new Pose(NEAR_LOADING_SHOOT_X, NEAR_LOADING_SHOOT_Y, 0);
+    }
+
+    /** GARDEN pickup, backing straight in from the GARDEN start: intake facing -y, at the wall. */
+    public static Pose gardenBackIn() {
+        return new Pose(GARDEN_BACKIN_X, hl() + GARDEN_SWEEP_WALL_GAP_IN, headingForIntakeFacing(-Math.PI / 2));
     }
 
     /** Heading (rad) that points the intake in a field direction (rad). */
