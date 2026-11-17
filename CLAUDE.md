@@ -88,7 +88,10 @@ Details: brief, section "TEMPORARY: treat the turret as FIXED".
     block shooting.
   - `Turret.update()` zeroes power past the limits in every mode, slows near them, and
     cuts power on a stall or encoder fault.
-  - Teleop must not re-zero after AUTO (use `PoseStorage`).
+  - Teleop must not re-zero after AUTO (use `PoseStorage`). The only exception is the
+    driver recovery button (G2 START + left stick press, held 1 s →
+    `Turret.rezeroHere()`), which isn't wired yet. Also, `PoseStorage.clear()` must null
+    `turretHomeTicks`. Brief: "Keeping the turret zero across AUTO → TeleOp".
   - Details: brief, section "Turret rotation limits".
 - **Aiming.** DECODE aimed by rotating the chassis. BIOBUZZ aims with the turret, via
   one shared `ShotSolver`: odometry feed-forward plus Limelight tx correction. It

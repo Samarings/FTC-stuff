@@ -125,6 +125,39 @@ Use `CAMERA_HEIGHT_M = 0.325` and replace it with a tape-measure value.
 - The old brief's **motor-layer enforcement** still applies with these limits, in every
   mode: zero power past a limit, slow-down zone near it, stall/encoder fault cut-off.
 
+### Keeping the turret zero across AUTO → TeleOp (added 2026-11-11, from a code trace)
+
+How it works now (already correct, don't change it):
+- AUTO, `AutoHoldStill` and TeleOp call `Robot.savePose()` **every loop** as well as in
+  `stop()`. So an AUTO that crashes or is stopped early still leaves a fresh turret home in
+  `PoseStorage.turretHomeTicks`.
+- The turret encoder is never reset (`RUN_WITHOUT_ENCODER`, never `STOP_AND_RESET`).
+- TeleOp uses the saved home only if `PoseStorage.isFresh(600)`. Otherwise it takes the
+  turret's **current position as 0°** and shows "No AUTO ran: the turret must be ON ITS
+  HOME MARK now".
+
+Two gaps to fix:
+1. **Add a driver re-zero button.** `Turret.rezeroHere()` exists but **nothing calls it**.
+   If the Control Hub restarts between AUTO and TeleOp (the statics are lost) with the turret
+   off its mark, the ±225° limits are shifted, and nothing on the gamepad can fix that.
+   - Control: **G2 START + left stick press, held 1 s** (use `Buttons.heldFor`). The driver
+     first lines the turret up on its home mark by hand, or with MANUAL.
+     - G2 BACK is taken (idle spin toggle), and G1 BACK + START is the pose reset.
+   - While G2 START is held, **suppress the left-stick AUTO/MANUAL toggle**, so the combo
+     doesn't also flip the mode.
+   - On success: `robot.turret.rezeroHere()`, set the turret to MANUAL and hold, rumble
+     G2, and show "TURRET RE-ZEROED" on telemetry for 2 s. Allowed in INIT and in TeleOp;
+     the turret must be unpowered (power 0) while it re-zeroes.
+   - Also add it to `TurretPidfTuner` and list it in the TeleOp header comment.
+2. **Clear the stale home.** `PoseStorage.clear()` (called at AUTO `start()`) clears the
+   pose but not `turretHomeTicks`. Set `turretHomeTicks = null` there too. Otherwise an AUTO
+   run with the turret unplugged hands TeleOp an older home from earlier in the same app
+   session.
+
+Test: run AUTO, turn the turret 90° by MANUAL, restart the Robot Controller app, start
+TeleOp → telemetry warns. Turn back to the mark, hold G2 START + left stick press 1 s →
+angle reads 0°. Then MANUAL to ±225° must stop at the marks.
+
 ## Driver controls (team spec)
 
 The team wrote "left stick". The gamepad isn't specified. **Assume gamepad 2
@@ -140,6 +173,8 @@ The team wrote "left stick". The gamepad isn't specified. **Assume gamepad 2
     document it.
 - **AUTO:** Limelight + PIDF tracking (below). If the Limelight loses the target, fall
   back to odometry aim. With no pose either, hold the current angle.
+- **Re-zero (recovery): G2 START + left stick press, held 1 s.** See "Keeping the turret
+  zero across AUTO → TeleOp" above.
 
 ## AUTO aim with the Limelight (team spec)
 
